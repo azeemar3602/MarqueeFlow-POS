@@ -120,6 +120,9 @@ export default function POS() {
       fullSale.customerName = customer?.name || null
       fullSale.customerPhone = customer?.phone || null
       fullSale.customerAddress = customer?.address || null
+      // Customer's total outstanding credit incl. any credit added by this sale
+      const saleCredit = Math.max(0, total - paidAmt)
+      fullSale.customerCredit = customer ? (Number(customer.credit_balance || 0) + saleCredit) : null
       setReceipt(fullSale)
       setCart([]); setDiscount(0); setPaid(''); setCustomer(null); setPayMethod('cash')
       api.get('/products?limit=500').then(r => setProducts(r.data))
