@@ -37,6 +37,7 @@ function textToBytes(str) {
 
 function buildESCPOS(sale, settings) {
   const s   = settings || {}
+  const cur = s.currency || 'PKR'
   // Char columns at Font A: 58mm printers = 32, 80mm printers = 48 (full width).
   const cols = Number(s.paperWidth) === 58 ? 32 : 48
 
@@ -100,8 +101,25 @@ function buildESCPOS(sale, settings) {
     push(textToBytes('Date : ' + dateStr + '   Time : ' + timeStr + '\n'))
     if (cashier) push(textToBytes('Cashier : ' + cashier + '\n'))
   }
-  if (s.showCustomer && sale.customerName) push(textToBytes('Customer : ' + sale.customerName + '\n'))
   push(textToBytes(divider('-')))
+
+  // ── Customer block (name larger, then phone / address / credit) ──
+  if (s.showCustomer && (sale.customerName || sale.customerPhone || sale.customerAddress)) {
+    if (sale.customerName) {
+      push(CMD.boldOn, CMD.dblHeightOn)
+      push(textToBytes('Customer: ' + sale.customerName + '\n'))
+      push(CMD.normalSize, CMD.boldOff)
+    }
+    if (sale.customerPhone)   push(textToBytes('Phone: ' + sale.customerPhone + '\n'))
+    if (sale.customerAddress) push(textToBytes('Address: ' + sale.customerAddress + '\n'))
+    const totalCredit = Number(sale.customerCredit)
+    if (!Number.isNaN(totalCredit) && totalCredit > 0) {
+      push(CMD.boldOn)
+      push(textToBytes(row('Total Credit:', cur + ' ' + num(totalCredit))))
+      push(CMD.boldOff)
+    }
+    push(textToBytes(divider('-')))
+  }
 
   // ── Item table ───────────────────────────────────────────
   push(CMD.boldOn)
@@ -114,8 +132,9 @@ function buildESCPOS(sale, settings) {
     const rate = s.showRate  ? num(it.unit_price) : ''
     const amt  = s.showTotal ? num(it.subtotal) : ''
     push(textToBytes(row4(name, qty, rate, amt)))
+    // Dashed separator + spacing between each item
+    push(textToBytes(divider('-')))
   }
-  push(textToBytes(divider('-')))
 
   // ── Totals ───────────────────────────────────────────────
   push(textToBytes(row('Subtotal', num(sale.subtotal))))
