@@ -553,4 +553,39 @@ export async function printViaBluetooth(sale, settings, printerNameHint) {
   }
 }
 
-export { buildESCPOS as buildESCPOSText, buildESCPOSData, renderReceiptPngDataUrl }
+// ── Urdu codepage diagnostic ──────────────────────────────────────────────────
+// Many Pakistani-market thermal printers have an Arabic/Urdu font in ROM that is
+// switched on with ESC t n (select character code table). The right n is vendor-
+// specific, so this prints the SAME Arabic sample under many candidate code pages.
+// Whichever printed line shows correct Urdu tells us which n to use. Pure text —
+// no image — so it works on printers that ignore raster commands.
+function buildCodepageTest() {
+  const out = []
+  const NL = 0x0A
+  const put = (...b) => { for (const x of b) out.push(x) }
+  const ascii = s => { for (let i = 0; i < s.length; i++) out.push(s.charCodeAt(i) & 0x7F) }
+  put(ESC, 0x40)
+  ascii('*** URDU CODEPAGE TEST ***'); put(NL)
+  ascii('Find the line that shows'); put(NL)
+  ascii('correct Urdu (bismillah):'); put(NL)
+  ascii('--------------------------------'); put(NL)
+  const sample1256 = [0xC8, 0xD3, 0xE3, 0x20, 0xC7, 0xE1, 0xE1, 0xE5]
+  const sample864  = [0xE7, 0xF3, 0xE5, 0x20, 0xC7, 0xDF, 0xDF, 0xEA]
+  const candidates = [16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,40,41,42,47,48,49,50,51,52]
+  for (const n of candidates) {
+    ascii('n=' + n + ': ')
+    put(ESC, 0x74, n)
+    put.apply(null, sample1256)
+    ascii('  /  ')
+    put.apply(null, sample864)
+    put(ESC, 0x74, 0)
+    put(NL)
+  }
+  ascii('--------------------------------'); put(NL)
+  ascii('Tell me which n= line is right'); put(NL)
+  put(ESC, 0x64, 0x03)
+  put(GS, 0x56, 0x42, 0x03)
+  return new Uint8Array(out)
+}
+
+export { buildESCPOS as buildESCPOSText, buildESCPOSData, renderReceiptPngDataUrl, buildCodepageTest }

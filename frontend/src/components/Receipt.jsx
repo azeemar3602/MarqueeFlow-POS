@@ -66,6 +66,22 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
     loadPaired()
   }, [showPrinterPicker])
 
+  // Diagnostic: print the Urdu codepage test over whatever raw path is in use.
+  async function printUrduCodepageTest() {
+    try {
+      const { buildCodepageTest } = await import('../lib/bluetoothPrint')
+      const data = buildCodepageTest()
+      const lpType = lastPrinter?.type
+      if (lpType === 'rawbt') return await printRawBT(data)
+      if (_btDevice) return await printViaDevice(_btDevice, sale, s, data)
+      if (lpType === 'bluetooth' || (navigator.bluetooth && !lpType)) return await printBluetooth(null, data)
+      // last resort: RawBT intent
+      return await printRawBT(data)
+    } catch (e) {
+      alert('Test print error: ' + e.message)
+    }
+  }
+
   async function printSystem() {
     const fmt = s.printFormat || 'thermal'
     const thermal = fmt === 'thermal'
@@ -131,11 +147,11 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
     return btoa(bin)
   }
 
-  async function printRawBT() {
+  async function printRawBT(overrideBytes) {
     setPrinting('rawbt')
     try {
       const { buildESCPOSData } = await import('../lib/bluetoothPrint')
-      const data = await buildESCPOSData(sale, s)
+      const data = overrideBytes || await buildESCPOSData(sale, s)
       const u8 = data instanceof Uint8Array ? data : new Uint8Array(data)
       const b64 = bytesToBase64(u8)
       // intent: URL → RawBT app. If RawBT is not installed, Chrome opens its Play Store page.
@@ -156,7 +172,7 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
     localStorage.setItem('rpos_bt_printers', JSON.stringify(updated.slice(0, 5)))
   }
 
-  async function printBluetooth(deviceObj) {
+  async function printBluetooth(deviceObj, overrideBytes) {
     if (!navigator.bluetooth) {
       alert('Bluetooth printing requires Chrome on Android.')
       return
@@ -203,7 +219,7 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
       localStorage.setItem(LAST_PRINTER_KEY, JSON.stringify({ type: 'bluetooth', id: devId, name: devName }))
 
       // ── Print ─────────────────────────────────────────────────────────────────
-      await printViaDevice(device, sale, s)
+      await printViaDevice(device, sale, s, overrideBytes)
       setShowPrinterPicker(false)
     } catch (e) {
       if (e.name !== 'NotFoundError' && e.name !== 'AbortError') alert('Print error: ' + e.message)
@@ -400,6 +416,15 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
               <div className="w-5" />
             </div>
 
+            {/* Urdu codepage diagnostic */}
+            <div className="px-4 pt-3 pb-1">
+              <button onClick={printUrduCodepageTest}
+                className="w-full text-sm py-2.5 rounded-xl font-semibold bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors">
+                🧪 Urdu Codepage Test Print
+              </button>
+              <p className="text-[11px] text-gray-400 text-center mt-1">Prints an Urdu sample in ~30 code pages to find one your printer supports</p>
+            </div>
+
             {/* Printer list */}
             <div className="divide-y divide-gray-100 max-h-[55vh] overflow-y-auto">
 
@@ -530,7 +555,7 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
 
 // Print to a specific already-paired BT device — reuses cached connection so
 // the browser pairing dialog never shows again after the first pair.
-async function printViaDevice(device, sale, settings) {
+async function printViaDevice(device, sale, settings, overrideBytes) {
   const BLE_PROFILES = [
     { service: '000018f0-0000-1000-8000-00805f9b34fb', char: '00002af1-0000-1000-8000-00805f9b34fb' },
     { service: 'e7810a71-73ae-499d-8c15-faa9aef0c3f2', char: 'bef8d6c9-9c21-4c9e-b632-bd58c1009f9f' },
@@ -572,7 +597,7 @@ async function printViaDevice(device, sale, settings) {
   }
 
   const { buildESCPOSData } = await import('../lib/bluetoothPrint')
-  const data = await buildESCPOSData(sale, settings)
+  const data = overrideBytes || await buildESCPOSData(sale, settings)
   const MTU = 512
   const writeMethod = _btChar.properties.writeWithoutResponse ? 'writeValueWithoutResponse' : 'writeValueWithResponse'
   for (let i = 0; i < data.length; i += MTU) {
