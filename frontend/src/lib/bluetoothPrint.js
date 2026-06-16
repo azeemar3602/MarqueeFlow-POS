@@ -413,34 +413,27 @@ async function renderReceiptPngDataUrl(sale, settings) {
   return { dataUrl: crop.toDataURL('image/png'), W, H }
 }
 
-// Convert the rendered receipt canvas to a banded GS v 0 ESC/POS raster.
-async function buildImageReceipt(sale, settings) {
-  const { ctx, W, H } = await renderReceiptCanvas(sale, settings)
-
-  // ── Canvas → 1-bit raster, emitted as banded GS v 0 (≤255 rows per band) ──
+// Convert a rendered receipt canvas (ctx, W, H) to an ESC * 24-dot strip raster.
+// Shared by sales receipts (buildImageReceipt) and payment receipts. ESC * is the
+// most buffer-safe raster mode on these printers; blank rows use LF (not ESC J,
+// which some printers ignore - collapsing whitespace).
+function canvasToEscStar(ctx, W, H) {
   const px = ctx.getImageData(0, 0, W, H).data
-  // Dark-pixel test for one (x,y); guards out-of-range rows in the last strip.
   const dark = (x, yy) => {
     if (yy >= H) return false
     const i = (yy * W + x) * 4
     const lum = px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114
     return lum < 170
   }
-
-  // Emit as ESC * 24-dot strips (the most buffer-safe, widely-supported raster
-  // mode). Each 24-row strip prints immediately on receipt, so the printer's
-  // input buffer never overflows — unlike one huge GS v 0 or back-to-back bands,
-  // which this printer silently drops (prints blank).
   const out = []
-  out.push(ESC, 0x40)            // init
-  out.push(ESC, 0x33, 24)       // line spacing = 24 dots so strips abut seamlessly
+  out.push(ESC, 0x40)
+  out.push(ESC, 0x33, 24)
   const nL = W & 0xFF, nH = (W >> 8) & 0xFF
   for (let top = 0; top < H; top += 24) {
-    // Build this strip's column bytes; track whether anything is printed.
     const strip = new Uint8Array(W * 3)
     let anyDark = false
     for (let x = 0; x < W; x++) {
-      for (let k = 0; k < 3; k++) {   // 3 bytes = 24 vertical dots per column
+      for (let k = 0; k < 3; k++) {
         let byte = 0
         for (let bit = 0; bit < 8; bit++) {
           if (dark(x, top + k * 8 + bit)) byte |= (0x80 >> bit)
@@ -450,16 +443,127 @@ async function buildImageReceipt(sale, settings) {
       }
     }
     if (anyDark) {
-      out.push(ESC, 0x2A, 33, nL, nH)   // ESC * m=33 (24-dot double density), W columns
+      out.push(ESC, 0x2A, 33, nL, nH)
       for (let j = 0; j < strip.length; j++) out.push(strip[j])
-      out.push(0x0A)             // advance one strip (24 dots)
+      out.push(0x0A)
     } else {
-      out.push(0x0A)             // blank strip: LF advances exactly 24 dots (line spacing set above) — keeps whitespace identical to printed strips, 1 byte
+      out.push(0x0A)
     }
   }
-  out.push(ESC, 0x32)            // restore default line spacing
+  out.push(ESC, 0x32)
   out.push(...CMD.feed3, ...CMD.cut)
   return new Uint8Array(out)
+}
+
+// Convert the rendered sales-receipt canvas to an ESC/POS raster.
+async function buildImageReceipt(sale, settings) {
+  const { ctx, W, H } = await renderReceiptCanvas(sale, settings)
+  return canvasToEscStar(ctx, W, H)
+}
+
+// Build a customer-payment receipt (credit payment) as an image so Urdu customer
+// names print correctly. p = { customerName, customerPhone, customerAddress,
+// amount, balanceAfter, at }.
+async function buildPaymentReceipt(p, settings) {
+  const s = settings || {}
+  const cur = s.currency || 'PKR'
+  const is58 = Number(s.paperWidth) === 58
+  const W = is58 ? 384 : 576
+  const PAD = 10
+  await ensureFont()
+  const num = n => Number(n || 0).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const canvas = document.createElement('canvas')
+  canvas.width = W; canvas.height = 900
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, canvas.height); ctx.fillStyle = '#000'; ctx.textBaseline = 'alphabetic'
+  const F = is58 ? { base: 22, small: 20, name: 28, big: 34 } : { base: 26, small: 23, name: 34, big: 42 }
+  let y = PAD
+  const font = (sz, b) => { ctx.font = (b ? '700 ' : '') + sz + 'px ' + AR_FONT }
+  const lh = sz => Math.round(sz * 1.35)
+  function line(text, o = {}) {
+    const sz = o.size || F.base; font(sz, !!o.bold)
+    const rtl = hasUrdu(text); ctx.direction = rtl ? 'rtl' : 'ltr'; y += lh(sz)
+    if (o.center) { ctx.textAlign = 'center'; ctx.fillText(text, W / 2, y - Math.round(sz * 0.30)) }
+    else if (rtl) { ctx.textAlign = 'right'; ctx.fillText(text, W - PAD, y - Math.round(sz * 0.30)) }
+    else { ctx.textAlign = 'left'; ctx.fillText(text, PAD, y - Math.round(sz * 0.30)) }
+  }
+  function lr(l, r, o = {}) {
+    const sz = o.size || F.base; const yb = y + lh(sz) - Math.round(sz * 0.30); y += lh(sz); font(sz, !!o.bold)
+    if (hasUrdu(l)) { ctx.direction = 'rtl'; ctx.textAlign = 'right'; ctx.fillText(l, W * 0.6, yb) }
+    else { ctx.direction = 'ltr'; ctx.textAlign = 'left'; ctx.fillText(l, PAD, yb) }
+    ctx.direction = 'ltr'; ctx.textAlign = 'right'; ctx.fillText(r, W - PAD, yb)
+  }
+  function divider() {
+    y += Math.round(F.base * 0.55); ctx.save(); ctx.strokeStyle = '#000'; ctx.lineWidth = 2
+    ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(PAD, y); ctx.lineTo(W - PAD, y); ctx.stroke(); ctx.restore()
+    y += Math.round(F.base * 0.55)
+  }
+  line(s.shopName || 'RetailPOS', { center: true, size: F.big, bold: true })
+  if (s.address) line(s.address, { center: true, size: F.small })
+  if (s.phone)   line('Phone: ' + s.phone, { center: true, size: F.small })
+  divider()
+  line('PAYMENT RECEIPT', { center: true, bold: true })
+  divider()
+  const d = new Date(p.at || Date.now())
+  lr('Date: ' + d.toLocaleDateString('en-GB'), 'Time: ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }), { size: F.small })
+  divider()
+  if (p.customerName)    line(p.customerName, { size: F.name, bold: true })
+  if (p.customerPhone)   line('Ph: ' + p.customerPhone, { bold: true })
+  if (p.customerAddress) line('Addr: ' + p.customerAddress, { bold: true })
+  divider()
+  lr('Amount Paid', cur + ' ' + num(p.amount), { size: F.big, bold: true })
+  divider()
+  lr('Previous Balance', cur + ' ' + num(Number(p.balanceAfter) + Number(p.amount)), { size: F.small })
+  lr('Remaining Balance', cur + ' ' + num(p.balanceAfter), { bold: true })
+  divider()
+  line(s.footer || 'Thank you!', { center: true, size: F.small })
+  y += 8
+  const H = Math.min(y + PAD, canvas.height)
+  return canvasToEscStar(ctx, W, H)
+}
+
+// Reusable raw-bytes printing (used by sales receipts AND payment receipts).
+function bytesToBase64(bytes) {
+  let bin = ''; const chunk = 0x8000
+  for (let i = 0; i < bytes.length; i += chunk) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk))
+  return btoa(bin)
+}
+
+async function printBytesViaBluetooth(bytes, hint) {
+  if (!navigator.bluetooth) throw new Error('Bluetooth printing requires Chrome on Android.')
+  const optionalServices = BLE_PROFILES.map(p => p.service)
+  let device = await resolveDevice()
+  if (!device) {
+    const name = getSavedPrinterName() || hint
+    const opts = name ? { filters: [{ name }], optionalServices } : { acceptAllDevices: true, optionalServices }
+    device = await navigator.bluetooth.requestDevice(opts)
+    cachedDevice = device; savePrinterName(device.name)
+  }
+  let char = await getConnectedChar()
+  if (!char) {
+    try { cachedServer = await cachedDevice.gatt.connect(); cachedChar = await findWriteChar(cachedServer); char = cachedChar } catch {}
+  }
+  if (!char) { cachedDevice = null; cachedServer = null; cachedChar = null; throw new Error('Could not connect to the printer.') }
+  const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)
+  const canAck = !!char.properties.write
+  const writeMethod = canAck ? 'writeValueWithResponse' : 'writeValueWithoutResponse'
+  const CHUNK = canAck ? 512 : 200
+  for (let i = 0; i < u8.length; i += CHUNK) {
+    await char[writeMethod](u8.slice(i, i + CHUNK))
+    if (!canAck) await new Promise(r => setTimeout(r, 15))
+  }
+}
+
+// Route bytes to whatever printer the user last used (RawBT intent or Bluetooth).
+async function printBytesToDefault(bytes, settings) {
+  const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)
+  let lp = null; try { lp = JSON.parse(localStorage.getItem('rpos_last_printer') || 'null') } catch {}
+  if (lp && lp.type === 'rawbt') {
+    const url = 'intent:base64,' + encodeURIComponent(bytesToBase64(u8)) + '#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;'
+    window.location.href = url
+    return
+  }
+  return await printBytesViaBluetooth(u8, lp && lp.name)
 }
 
 // Auto-select: image bitmap when the bill has Urdu, fast text mode otherwise.
@@ -739,4 +843,4 @@ async function renderUrduSamplePng(settings) {
   return { dataUrl: r.dataUrl, W: r.W, H: r.H, dark, fontOk }
 }
 
-export { buildESCPOS as buildESCPOSText, buildESCPOSData, renderReceiptPngDataUrl, buildCodepageTest, buildCodepageMap, buildArabicPageDump , buildUrduImageTest , buildRasterSelfTest , renderUrduSamplePng }
+export { buildESCPOS as buildESCPOSText, buildESCPOSData, renderReceiptPngDataUrl, buildCodepageTest, buildCodepageMap, buildArabicPageDump , buildUrduImageTest , buildRasterSelfTest , renderUrduSamplePng , buildPaymentReceipt , printBytesToDefault }

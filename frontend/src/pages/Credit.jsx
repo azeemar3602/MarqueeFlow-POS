@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Search, CreditCard, ArrowDownLeft, FileText, AlertTriangle, X } from 'lucide-react'
+import { Search, CreditCard, ArrowDownLeft, FileText, AlertTriangle, X, CheckCircle, Printer } from 'lucide-react'
 import api from '../api'
+import { useSettings } from '../context/SettingsContext'
+import { buildPaymentReceipt, printBytesToDefault } from '../lib/bluetoothPrint'
 
 function Modal({ title, onClose, children }) {
   return (
@@ -27,6 +29,10 @@ export default function Credit() {
   const [payAmount, setPayAmount] = useState('')
   const [modal, setModal] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [paid, setPaid] = useState(null)
+  const [printing, setPrinting] = useState(false)
+  const settingsCtx = (() => { try { return useSettings() } catch { return null } })()
+  const settings = settingsCtx?.settings || {}
 
   async function load() {
     const { data } = await api.get('/reports/customer-ledger')
@@ -44,10 +50,29 @@ export default function Credit() {
     if (!payAmount || parseFloat(payAmount) <= 0) return
     setSaving(true)
     try {
-      await api.post('/customers/' + selected.id + '/payment', { amount: parseFloat(payAmount) })
-      await load(); setModal(null); setPayAmount('')
+      const amt = parseFloat(payAmount)
+      const { data } = await api.post('/customers/' + selected.id + '/payment', { amount: amt })
+      setPaid({ customer: selected, amount: amt, newBalance: Number(data.newBalance), at: new Date() })
+      await load(); setPayAmount(''); setModal('paid')
     } catch (e) { alert(e.response?.data?.error || e.message) }
     setSaving(false)
+  }
+
+  async function printPaymentReceipt() {
+    if (!paid) return
+    setPrinting(true)
+    try {
+      const bytes = await buildPaymentReceipt({
+        customerName: paid.customer.name,
+        customerPhone: paid.customer.phone,
+        customerAddress: paid.customer.address,
+        amount: paid.amount,
+        balanceAfter: paid.newBalance,
+        at: paid.at,
+      }, settings)
+      await printBytesToDefault(bytes, settings)
+    } catch (e) { alert('Print error: ' + (e.message || e)) }
+    setPrinting(false)
   }
 
   function printStatement() {
@@ -150,6 +175,23 @@ export default function Credit() {
           <div className="flex gap-2">
             <button onClick={() => setModal(null)} className="btn-secondary flex-1">Cancel</button>
             <button onClick={recordPayment} disabled={saving || !payAmount} className="btn-success flex-1">{saving ? 'Saving…' : 'Record Payment'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal === 'paid' && paid && (
+        <Modal title="Payment Recorded" onClose={() => { setModal(null); setPaid(null) }}>
+          <div className="bg-emerald-50 rounded-xl p-4 mb-4 text-center">
+            <CheckCircle size={32} className="text-emerald-600 mx-auto mb-1" />
+            <p className="text-sm text-gray-600">{paid.customer.name}</p>
+            <p className="text-2xl font-bold text-emerald-700">{PKR(paid.amount)} paid</p>
+            <p className="text-sm text-gray-500 mt-1">Remaining balance: <b className={paid.newBalance > 0 ? 'text-red-600' : 'text-emerald-600'}>{PKR(paid.newBalance)}</b></p>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => { setModal(null); setPaid(null) }} className="btn-secondary flex-1">Done</button>
+            <button onClick={printPaymentReceipt} disabled={printing} className="btn-primary flex-1 flex items-center justify-center gap-2">
+              <Printer size={16} /> {printing ? 'Printing…' : 'Print Receipt'}
+            </button>
           </div>
         </Modal>
       )}
