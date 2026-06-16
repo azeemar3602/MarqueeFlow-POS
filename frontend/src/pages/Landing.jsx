@@ -85,13 +85,13 @@ function PosDemo() {
     let i = 0, alive = true
     const step = () => {
       if (!alive) return
-      if (i < DEMO_ITEMS.length) { setCart(c => [...c, DEMO_ITEMS[i]]); i++; setTimeout(step, 850) }
+      if (i < DEMO_ITEMS.length) { const item = DEMO_ITEMS[i]; setCart(c => [...c, item]); i++; setTimeout(step, 850) }
       else { setPrinting(true); setTimeout(() => { if (!alive) return; setPrinting(false); setCart([]); i = 0; setTimeout(step, 900) }, 3200) }
     }
     const t = setTimeout(step, 700)
     return () => { alive = false; clearTimeout(t) }
   }, [])
-  const total = cart.reduce((s, x) => s + x.p, 0)
+  const total = cart.reduce((s, x) => s + (x ? x.p : 0), 0)
   return (
     <div className="mt-12 mx-auto max-w-3xl rounded-2xl border border-gray-200/70 shadow-2xl overflow-hidden bg-white/90 backdrop-blur relative demo-card">
       <div className="flex items-center gap-1.5 px-4 py-3 border-b border-gray-100 bg-gray-50/80">
