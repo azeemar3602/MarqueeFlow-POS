@@ -22,7 +22,7 @@ export default function Landing() {
       <style>{`
         @keyframes promoBlink { 0%,100%{opacity:1} 50%{opacity:.5} }
         .promo-blink { animation: promoBlink 1.2s ease-in-out infinite; }
-        @keyframes promoFlash { 0%,100%{color:#fff;transform:scale(1)} 50%{color:#ffe600;transform:scale(1.14)} }
+        @keyframes promoFlash { 0%,100%{transform:scale(1)} 50%{transform:scale(1.14)} }
         .promo-flash { display:inline-block; animation: promoFlash .8s ease-in-out infinite; font-weight:900; }
         @keyframes ribbonPulse { 0%,100%{box-shadow:0 0 0 0 rgba(244,63,94,.55)} 50%{box-shadow:0 0 0 10px rgba(244,63,94,0)} }
         .ribbon-pulse { animation: ribbonPulse 1.5s infinite; }
@@ -32,7 +32,7 @@ export default function Landing() {
 
       {/* Limited-time offer announcement bar */}
       <div className="promo-blink promo-sheen sticky top-0 z-50 text-white text-center py-2 px-4 text-sm font-extrabold shadow-md"
-           style={{ background: 'linear-gradient(90deg,#e11d48,#f97316,#e11d48)' }}>
+           style={{ background: 'linear-gradient(90deg,#059669,#10b981,#059669)' }}>
         🔥 LIMITED TIME OFFER — <span className="promo-flash">50% OFF</span> ALL PLANS! Hurry, offer ends soon —{' '}
         <Link to="/register" className="underline underline-offset-2">Grab it now →</Link> 🔥
       </div>
@@ -65,7 +65,7 @@ export default function Landing() {
         </span>
         <div className="mb-5">
           <span className="ribbon-pulse promo-blink inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-white text-sm font-extrabold"
-                style={{ background: 'linear-gradient(90deg,#e11d48,#f97316)' }}>
+                style={{ background: 'linear-gradient(90deg,#059669,#10b981)' }}>
             🎉 50% OFF — Limited Time Launch Offer! 🎉
           </span>
         </div>
@@ -166,7 +166,7 @@ export default function Landing() {
           <div className="text-center">
             <div className="mb-3">
               <span className="promo-blink ribbon-pulse inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-white text-xs font-extrabold"
-                    style={{ background: 'linear-gradient(90deg,#e11d48,#f97316)' }}>
+                    style={{ background: 'linear-gradient(90deg,#059669,#10b981)' }}>
                 ⚡ FLASH SALE · 50% OFF ALL PLANS · LIMITED TIME ⚡
               </span>
             </div>
@@ -189,10 +189,10 @@ export default function Landing() {
                     <p className="text-2xl font-extrabold text-emerald-600">Free<span className="text-sm font-medium text-gray-400"> / {t.trialDays} days</span></p>
                   ) : (
                     <>
-                      <span className="inline-block mb-1 px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-extrabold promo-flash" style={{ color: '#e11d48' }}>50% OFF</span>
+                      <span className="promo-blink inline-block mb-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-extrabold">50% OFF</span>
                       <div className="flex items-baseline gap-2">
                         <p className="text-base font-semibold text-gray-400 line-through">{money(t.oneTime * 2)}</p>
-                        <p className="text-2xl font-extrabold text-rose-600">{money(t.oneTime)}</p>
+                        <p className="text-2xl font-extrabold text-emerald-600">{money(t.oneTime)}</p>
                       </div>
                       <p className="text-xs text-gray-400">one-time + {money(t.yearly)}/year</p>
                     </>
