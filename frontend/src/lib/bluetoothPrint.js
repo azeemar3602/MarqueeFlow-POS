@@ -588,4 +588,31 @@ function buildCodepageTest() {
   return new Uint8Array(out)
 }
 
-export { buildESCPOS as buildESCPOSText, buildESCPOSData, renderReceiptPngDataUrl, buildCodepageTest }
+// Dump each code page's high-byte glyphs (0xC0-0xFF) so we can READ which page
+// (if any) contains Arabic/Urdu letters and its exact byte->glyph mapping.
+function buildCodepageMap() {
+  const out = []
+  const NL = 0x0A
+  const put = (...b) => { for (const x of b) out.push(x) }
+  const ascii = s => { for (let i = 0; i < s.length; i++) out.push(s.charCodeAt(i) & 0x7F) }
+  put(ESC, 0x40)
+  ascii('=== CODEPAGE CHAR MAP ==='); put(NL)
+  ascii('Which page shows Arabic?'); put(NL)
+  ascii('--------------------------------'); put(NL)
+  for (let n = 16; n <= 34; n++) {
+    ascii('PAGE n=' + n + ':'); put(NL)
+    for (let base = 0xC0; base < 0x100; base += 32) {
+      put(ESC, 0x74, n)
+      for (let b = base; b < base + 32 && b < 0x100; b++) put(b)
+      put(ESC, 0x74, 0)
+      put(NL)
+    }
+  }
+  ascii('--------------------------------'); put(NL)
+  ascii('Send a clear photo'); put(NL)
+  put(ESC, 0x64, 0x03)
+  put(GS, 0x56, 0x42, 0x03)
+  return new Uint8Array(out)
+}
+
+export { buildESCPOS as buildESCPOSText, buildESCPOSData, renderReceiptPngDataUrl, buildCodepageTest, buildCodepageMap }
