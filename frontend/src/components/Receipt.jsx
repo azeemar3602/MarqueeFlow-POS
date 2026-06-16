@@ -73,7 +73,23 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
     win.document.write(html)
     win.document.close()
     win.focus()
-    setTimeout(() => { win.print(); win.close() }, 350)
+    // Wait for the embedded Urdu font to finish loading before printing,
+    // otherwise Arabic/Urdu glyphs render blank. Fall back to a timeout if
+    // the Font Loading API is unavailable.
+    const doPrint = () => { try { win.print() } catch {} ; try { win.close() } catch {} }
+    let printed = false
+    const once = () => { if (printed) return; printed = true; doPrint() }
+    try {
+      if (win.document.fonts && win.document.fonts.ready) {
+        win.document.fonts.ready.then(() => setTimeout(once, 150))
+        // Safety net in case fonts.ready never resolves (e.g. font 404)
+        setTimeout(once, 2500)
+      } else {
+        setTimeout(once, 600)
+      }
+    } catch {
+      setTimeout(once, 600)
+    }
     localStorage.setItem(LAST_PRINTER_KEY, JSON.stringify({ type: 'system', name: 'Any A4/A3/A5 Etc.' }))
     setShowPrinterPicker(false)
   }
