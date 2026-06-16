@@ -27,7 +27,6 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
   const [showPrinterPicker, setShowPrinterPicker] = useState(false)
   const [pairedPrinters, setPairedPrinters] = useState([])   // previously paired BT devices
   const [printing, setPrinting] = useState(null)             // deviceId being printed to
-  const [urduPreview, setUrduPreview] = useState(null)       // {dataUrl,dark,fontOk} debug preview
   const lastPrinter = (() => { try { return JSON.parse(localStorage.getItem(LAST_PRINTER_KEY)) } catch { return null } })()
 
   const credit = Number(sale.total) - Number(sale.paid)
@@ -66,21 +65,6 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
     }
     loadPaired()
   }, [showPrinterPicker])
-
-  // Diagnostic: print the Urdu codepage test over whatever raw path is in use.
-  async function printUrduCodepageTest() {
-    try {
-      const { buildUrduImageTest } = await import('../lib/bluetoothPrint')
-      const data = await buildUrduImageTest(s)
-      const lpType = lastPrinter?.type
-      if (lpType === 'rawbt') return await printRawBT(data)
-      if (_btDevice) return await printViaDevice(_btDevice, sale, s, data)
-      if (lpType === 'bluetooth' || (navigator.bluetooth && !lpType)) return await printBluetooth(null, data)
-      return await printRawBT(data)
-    } catch (e) {
-      alert('Test print error: ' + e.message)
-    }
-  }
 
   async function printSystem() {
     const fmt = s.printFormat || 'thermal'
@@ -416,15 +400,6 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
               <div className="w-5" />
             </div>
 
-            {/* Urdu codepage diagnostic */}
-            <div className="px-4 pt-3 pb-1">
-              <button onClick={printUrduCodepageTest}
-                className="w-full text-sm py-2.5 rounded-xl font-semibold bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors">
-                🖨️ Print Urdu Image (test)
-              </button>
-              <p className="text-[11px] text-gray-400 text-center mt-1">Prints an Urdu sample in ~30 code pages to find one your printer supports</p>
-            </div>
-
             {/* Printer list */}
             <div className="divide-y divide-gray-100 max-h-[55vh] overflow-y-auto">
 
@@ -550,20 +525,6 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
         </div>
       )}
 
-      {urduPreview && (
-        <div className="fixed inset-0 bg-black/80 z-[80] flex flex-col items-center justify-center p-4 overflow-auto"
-          onClick={() => setUrduPreview(null)}>
-          <div className="bg-white rounded-xl p-3 max-w-sm w-full" onClick={e => e.stopPropagation()}>
-            <p className="text-sm font-bold mb-1">Urdu canvas preview</p>
-            <p className="text-xs text-gray-500 mb-2">
-              fontLoaded={String(urduPreview.fontOk)} · darkPixels={urduPreview.dark} · {urduPreview.W}x{urduPreview.H}
-            </p>
-            <img src={urduPreview.dataUrl} alt="urdu" style={{ width: '100%', border: '1px solid #ccc' }} />
-            <button onClick={() => setUrduPreview(null)}
-              className="btn-primary w-full mt-3 py-2 text-sm">Close</button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
