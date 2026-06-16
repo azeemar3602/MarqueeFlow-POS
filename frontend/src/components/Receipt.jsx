@@ -66,32 +66,56 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
     loadPaired()
   }, [showPrinterPicker])
 
-  function printSystem() {
-    const html = buildReceiptHTML(sale, s)
-    const win = window.open('', '_blank', 'width=420,height=640')
-    if (!win) return alert('Please allow pop-ups to print the receipt.')
-    win.document.write(html)
-    win.document.close()
-    win.focus()
-    // Wait for the embedded Urdu font to finish loading before printing,
-    // otherwise Arabic/Urdu glyphs render blank. Fall back to a timeout if
-    // the Font Loading API is unavailable.
-    const doPrint = () => { try { win.print() } catch {} ; try { win.close() } catch {} }
-    let printed = false
-    const once = () => { if (printed) return; printed = true; doPrint() }
+  async function printSystem() {
+    const fmt = s.printFormat || 'thermal'
+    const thermal = fmt === 'thermal'
     try {
-      if (win.document.fonts && win.document.fonts.ready) {
-        win.document.fonts.ready.then(() => setTimeout(once, 150))
-        // Safety net in case fonts.ready never resolves (e.g. font 404)
-        setTimeout(once, 2500)
+      let html
+      if (thermal) {
+        // Thermal: print the receipt as a rendered IMAGE so Urdu survives.
+        // (The OS print service would otherwise send text to the printer's
+        // built-in font, which has no Urdu glyphs -> Urdu prints blank.)
+        const { renderReceiptPngDataUrl } = await import('../lib/bluetoothPrint')
+        const { dataUrl } = await renderReceiptPngDataUrl(sale, s)
+        const widthMm = Number(s.paperWidth) || 80
+        html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Receipt #${sale.id}</title>
+          <style>
+            @page { size: ${widthMm}mm auto; margin: 0; }
+            * { margin:0; padding:0; box-sizing:border-box; }
+            html, body { width:100%; }
+            img { display:block; width:100%; image-rendering:pixelated; }
+          </style></head><body><img id="rcpt" src="${dataUrl}"></body></html>`
       } else {
-        setTimeout(once, 600)
+        // A4/A5: laser/inkjet printers rasterize HTML with system fonts, so the
+        // embedded @font-face renders Urdu fine here.
+        html = buildReceiptHTML(sale, s)
       }
-    } catch {
-      setTimeout(once, 600)
+
+      const win = window.open('', '_blank', 'width=420,height=640')
+      if (!win) return alert('Please allow pop-ups to print the receipt.')
+      win.document.write(html)
+      win.document.close()
+      win.focus()
+
+      let printed = false
+      const go = () => { if (printed) return; printed = true; try { win.print() } catch {} ; try { win.close() } catch {} }
+      if (thermal) {
+        const img = win.document.getElementById('rcpt')
+        if (img && !img.complete) { img.onload = () => setTimeout(go, 120); setTimeout(go, 3000) }
+        else setTimeout(go, 200)
+      } else {
+        try {
+          if (win.document.fonts && win.document.fonts.ready) {
+            win.document.fonts.ready.then(() => setTimeout(go, 150))
+            setTimeout(go, 2500)
+          } else setTimeout(go, 600)
+        } catch { setTimeout(go, 600) }
+      }
+      localStorage.setItem(LAST_PRINTER_KEY, JSON.stringify({ type: 'system', name: 'System Printer' }))
+      setShowPrinterPicker(false)
+    } catch (e) {
+      alert('Print error: ' + e.message)
     }
-    localStorage.setItem(LAST_PRINTER_KEY, JSON.stringify({ type: 'system', name: 'Any A4/A3/A5 Etc.' }))
-    setShowPrinterPicker(false)
   }
 
   // ── RawBT: universal thermal printing (works with Classic SPP AND BLE printers) ──

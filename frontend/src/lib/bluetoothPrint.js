@@ -217,7 +217,7 @@ async function ensureFont() {
 }
 
 // Render the whole receipt to a canvas, then emit it as a banded GS v 0 raster.
-async function buildImageReceipt(sale, settings) {
+async function renderReceiptCanvas(sale, settings) {
   const s   = settings || {}
   const cur = s.currency || 'PKR'
   const is58 = Number(s.paperWidth) === 58
@@ -391,6 +391,23 @@ async function buildImageReceipt(sale, settings) {
   gap(8)
 
   const H = Math.min(y + PAD, canvas.height)
+  return { canvas, ctx, W, H }
+}
+
+// Render the receipt as a cropped PNG data URL. Used by the System/HTML print
+// path so Urdu prints as PIXELS — the OS print service can't re-render it with
+// the thermal printer's Urdu-less ROM font (which is why text-mode printed blank).
+async function renderReceiptPngDataUrl(sale, settings) {
+  const { canvas, W, H } = await renderReceiptCanvas(sale, settings)
+  const crop = document.createElement('canvas')
+  crop.width = W; crop.height = H
+  crop.getContext('2d').drawImage(canvas, 0, 0, W, H, 0, 0, W, H)
+  return { dataUrl: crop.toDataURL('image/png'), W, H }
+}
+
+// Convert the rendered receipt canvas to a banded GS v 0 ESC/POS raster.
+async function buildImageReceipt(sale, settings) {
+  const { ctx, W, H } = await renderReceiptCanvas(sale, settings)
 
   // ── Canvas → 1-bit raster, emitted as banded GS v 0 (≤255 rows per band) ──
   const px = ctx.getImageData(0, 0, W, H).data
@@ -536,4 +553,4 @@ export async function printViaBluetooth(sale, settings, printerNameHint) {
   }
 }
 
-export { buildESCPOS as buildESCPOSText, buildESCPOSData }
+export { buildESCPOS as buildESCPOSText, buildESCPOSData, renderReceiptPngDataUrl }
