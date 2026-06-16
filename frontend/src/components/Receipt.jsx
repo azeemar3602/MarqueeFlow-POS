@@ -27,6 +27,7 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
   const [showPrinterPicker, setShowPrinterPicker] = useState(false)
   const [pairedPrinters, setPairedPrinters] = useState([])   // previously paired BT devices
   const [printing, setPrinting] = useState(null)             // deviceId being printed to
+  const [urduPreview, setUrduPreview] = useState(null)       // {dataUrl,dark,fontOk} debug preview
   const lastPrinter = (() => { try { return JSON.parse(localStorage.getItem(LAST_PRINTER_KEY)) } catch { return null } })()
 
   const credit = Number(sale.total) - Number(sale.paid)
@@ -75,7 +76,6 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
       if (lpType === 'rawbt') return await printRawBT(data)
       if (_btDevice) return await printViaDevice(_btDevice, sale, s, data)
       if (lpType === 'bluetooth' || (navigator.bluetooth && !lpType)) return await printBluetooth(null, data)
-      // last resort: RawBT intent
       return await printRawBT(data)
     } catch (e) {
       alert('Test print error: ' + e.message)
@@ -420,7 +420,7 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
             <div className="px-4 pt-3 pb-1">
               <button onClick={printUrduCodepageTest}
                 className="w-full text-sm py-2.5 rounded-xl font-semibold bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors">
-                🖼️ Test Urdu Image Print
+                🖨️ Print Urdu Image (test)
               </button>
               <p className="text-[11px] text-gray-400 text-center mt-1">Prints an Urdu sample in ~30 code pages to find one your printer supports</p>
             </div>
@@ -549,6 +549,21 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
           </div>
         </div>
       )}
+
+      {urduPreview && (
+        <div className="fixed inset-0 bg-black/80 z-[80] flex flex-col items-center justify-center p-4 overflow-auto"
+          onClick={() => setUrduPreview(null)}>
+          <div className="bg-white rounded-xl p-3 max-w-sm w-full" onClick={e => e.stopPropagation()}>
+            <p className="text-sm font-bold mb-1">Urdu canvas preview</p>
+            <p className="text-xs text-gray-500 mb-2">
+              fontLoaded={String(urduPreview.fontOk)} · darkPixels={urduPreview.dark} · {urduPreview.W}x{urduPreview.H}
+            </p>
+            <img src={urduPreview.dataUrl} alt="urdu" style={{ width: '100%', border: '1px solid #ccc' }} />
+            <button onClick={() => setUrduPreview(null)}
+              className="btn-primary w-full mt-3 py-2 text-sm">Close</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -598,11 +613,15 @@ async function printViaDevice(device, sale, settings, overrideBytes) {
 
   const { buildESCPOSData } = await import('../lib/bluetoothPrint')
   const data = overrideBytes || await buildESCPOSData(sale, settings)
-  const MTU = 512
-  const writeMethod = _btChar.properties.writeWithoutResponse ? 'writeValueWithoutResponse' : 'writeValueWithResponse'
-  for (let i = 0; i < data.length; i += MTU) {
-    await _btChar[writeMethod](data.slice(i, i + MTU))
-    await new Promise(r => setTimeout(r, 30))
+  // Large raster images (Urdu receipts ~72KB) need RELIABLE delivery: prefer
+  // acknowledged writes (flow-controlled, no buffer overrun) and small chunks
+  // (BLE packets are tiny; 512-byte unacked writes silently drop on big sends).
+  const canAck = !!_btChar.properties.write
+  const writeMethod = canAck ? 'writeValueWithResponse' : 'writeValueWithoutResponse'
+  const CHUNK = canAck ? 512 : 200
+  for (let i = 0; i < data.length; i += CHUNK) {
+    await _btChar[writeMethod](data.slice(i, i + CHUNK))
+    if (!canAck) await new Promise(r => setTimeout(r, 15))
   }
   // Do NOT disconnect — keeping connection alive prevents the pairing dialog on next print.
 }

@@ -411,40 +411,47 @@ async function buildImageReceipt(sale, settings) {
 
   // ── Canvas → 1-bit raster, emitted as banded GS v 0 (≤255 rows per band) ──
   const px = ctx.getImageData(0, 0, W, H).data
-  const bytesPerRow = W >> 3            // W is a multiple of 8 (576 / 384)
-  const out = []
-  const BAND = 255                      // keep each command within printer buffer
-
-  for (let bandTop = 0; bandTop < H; bandTop += BAND) {
-    const rows = Math.min(BAND, H - bandTop)
-    const band = new Uint8Array(bytesPerRow * rows)
-    for (let r = 0; r < rows; r++) {
-      const srcRow = bandTop + r
-      for (let b = 0; b < bytesPerRow; b++) {
-        let byte = 0
-        for (let bit = 0; bit < 8; bit++) {
-          const x = (b << 3) + bit
-          const i = (srcRow * W + x) * 4
-          // luminance; black dot when dark. Threshold high-ish so thin Urdu
-          // strokes survive the 1-bit conversion.
-          const lum = px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114
-          if (lum < 170) byte |= (0x80 >> bit)
-        }
-        band[b] = byte
-      }
-    }
-    // GS v 0 m xL xH yL yH  (m=0 normal). Band height ≤255 so yH=0.
-    out.push(GS, 0x76, 0x30, 0x00, bytesPerRow & 0xFF, (bytesPerRow >> 8) & 0xFF, rows & 0xFF, 0x00)
-    for (let k = 0; k < band.length; k++) out.push(band[k])
+  // Dark-pixel test for one (x,y); guards out-of-range rows in the last strip.
+  const dark = (x, yy) => {
+    if (yy >= H) return false
+    const i = (yy * W + x) * 4
+    const lum = px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114
+    return lum < 170
   }
 
-  // init + image + feed + cut
-  const head = new Uint8Array(CMD.init)
-  const body = new Uint8Array(out)
-  const tail = new Uint8Array([...CMD.feed3, ...CMD.cut])
-  const merged = new Uint8Array(head.length + body.length + tail.length)
-  merged.set(head, 0); merged.set(body, head.length); merged.set(tail, head.length + body.length)
-  return merged
+  // Emit as ESC * 24-dot strips (the most buffer-safe, widely-supported raster
+  // mode). Each 24-row strip prints immediately on receipt, so the printer's
+  // input buffer never overflows — unlike one huge GS v 0 or back-to-back bands,
+  // which this printer silently drops (prints blank).
+  const out = []
+  out.push(ESC, 0x40)            // init
+  out.push(ESC, 0x33, 24)       // line spacing = 24 dots so strips abut seamlessly
+  const nL = W & 0xFF, nH = (W >> 8) & 0xFF
+  for (let top = 0; top < H; top += 24) {
+    // Build this strip's column bytes; track whether anything is printed.
+    const strip = new Uint8Array(W * 3)
+    let anyDark = false
+    for (let x = 0; x < W; x++) {
+      for (let k = 0; k < 3; k++) {   // 3 bytes = 24 vertical dots per column
+        let byte = 0
+        for (let bit = 0; bit < 8; bit++) {
+          if (dark(x, top + k * 8 + bit)) byte |= (0x80 >> bit)
+        }
+        if (byte) anyDark = true
+        strip[x * 3 + k] = byte
+      }
+    }
+    if (anyDark) {
+      out.push(ESC, 0x2A, 33, nL, nH)   // ESC * m=33 (24-dot double density), W columns
+      for (let j = 0; j < strip.length; j++) out.push(strip[j])
+      out.push(0x0A)             // advance one strip (24 dots)
+    } else {
+      out.push(ESC, 0x4A, 24)    // blank strip: just feed 24 dots (3 bytes vs ~1.7KB)
+    }
+  }
+  out.push(ESC, 0x32)            // restore default line spacing
+  out.push(...CMD.feed3, ...CMD.cut)
+  return new Uint8Array(out)
 }
 
 // Auto-select: image bitmap when the bill has Urdu, fast text mode otherwise.
@@ -662,4 +669,66 @@ async function buildUrduImageTest(settings) {
   return await buildImageReceipt(sample, s)
 }
 
-export { buildESCPOS as buildESCPOSText, buildESCPOSData, renderReceiptPngDataUrl, buildCodepageTest, buildCodepageMap, buildArabicPageDump , buildUrduImageTest }
+// Print two known-good black bars using two different ESC/POS image commands.
+// Tells us which raster command (if any) this printer supports.
+function buildRasterSelfTest() {
+  const out = []
+  const put = (...b) => { for (const x of b) out.push(x) }
+  const ascii = s => { for (let i = 0; i < s.length; i++) out.push(s.charCodeAt(i) & 0x7F) }
+  const NL = 0x0A
+  put(ESC, 0x40)
+  ascii('RASTER SELF TEST'); put(NL)
+  ascii('--------------------------------'); put(NL)
+  // (1) GS v 0 raster — a 384x48 striped block
+  ascii('1) GS v 0 below:'); put(NL)
+  {
+    const W = 384, bpr = W >> 3, rows = 48
+    put(GS, 0x76, 0x30, 0x00, bpr & 0xFF, (bpr >> 8) & 0xFF, rows & 0xFF, (rows >> 8) & 0xFF)
+    for (let r = 0; r < rows; r++)
+      for (let b = 0; b < bpr; b++) put((Math.floor(r / 8) % 2 === 0) ? 0xFF : 0x00)
+  }
+  put(NL)
+  ascii('--------------------------------'); put(NL)
+  // (2) ESC * (legacy 8-dot bit image) — a solid black bar repeated 6 times
+  ascii('2) ESC * below:'); put(NL)
+  {
+    const n = 300, nL = n & 0xFF, nH = (n >> 8) & 0xFF
+    for (let line = 0; line < 6; line++) {
+      put(ESC, 0x2A, 0x00, nL, nH)
+      for (let i = 0; i < n; i++) put(0xFF)
+      put(NL)
+    }
+  }
+  ascii('--------------------------------'); put(NL)
+  ascii('Which number printed black?'); put(NL)
+  put(ESC, 0x64, 0x03)
+  put(GS, 0x56, 0x42, 0x03)
+  return new Uint8Array(out)
+}
+
+// Render the sample Urdu receipt to a PNG data URL so the UI can DISPLAY it
+// on the device — to see whether the canvas itself renders Urdu.
+async function renderUrduSamplePng(settings) {
+  const sample = {
+    id: 999, created_at: Date.now(), cashierName: 'Test',
+    customerName: 'احمد', customerPhone: '03001234567',
+    items: [
+      { product_name: 'چینی', qty: 1, unit_price: 120, subtotal: 120 },
+      { product_name: 'Sugar / چینی', qty: 2, unit_price: 50, subtotal: 100 },
+      { product_name: 'Calci 10 tablets', qty: 1, unit_price: 350, subtotal: 350 },
+    ],
+    subtotal: 570, discount: 0, total: 570, paid: 600, payment_method: 'cash',
+  }
+  const s = Object.assign({ shopName: 'Arif & Brothers', showName: true, showQty: true, showRate: true, showTotal: true, showCustomer: true, showCashier: true }, settings || {})
+  const r = await renderReceiptPngDataUrl(sample, s)
+  let dark = 0
+  try {
+    const img = await renderReceiptCanvas(sample, s)
+    const d = img.ctx.getImageData(0, 0, img.W, img.H).data
+    for (let i = 0; i < d.length; i += 4) { const l = d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114; if (l < 170) dark++ }
+  } catch (e) { dark = -1 }
+  const fontOk = (typeof document !== 'undefined' && document.fonts) ? document.fonts.check('24px "Noto Naskh Arabic"') : null
+  return { dataUrl: r.dataUrl, W: r.W, H: r.H, dark, fontOk }
+}
+
+export { buildESCPOS as buildESCPOSText, buildESCPOSData, renderReceiptPngDataUrl, buildCodepageTest, buildCodepageMap, buildArabicPageDump , buildUrduImageTest , buildRasterSelfTest , renderUrduSamplePng }
