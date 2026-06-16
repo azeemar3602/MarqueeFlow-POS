@@ -454,7 +454,7 @@ async function buildImageReceipt(sale, settings) {
       for (let j = 0; j < strip.length; j++) out.push(strip[j])
       out.push(0x0A)             // advance one strip (24 dots)
     } else {
-      out.push(ESC, 0x4A, 24)    // blank strip: just feed 24 dots (3 bytes vs ~1.7KB)
+      out.push(0x0A)             // blank strip: LF advances exactly 24 dots (line spacing set above) — keeps whitespace identical to printed strips, 1 byte
     }
   }
   out.push(ESC, 0x32)            // restore default line spacing
