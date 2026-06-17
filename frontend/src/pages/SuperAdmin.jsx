@@ -270,7 +270,8 @@ export default function SuperAdmin() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-gray-900 truncate">{t.name}</p>
+                      <p className="font-semibold text-gray-900 truncate">{t.shop_name || t.name}</p>
+                      {t.shop_name && t.shop_name !== t.name && <p className="text-[11px] text-gray-400 truncate">Registered as: {t.name}</p>}
                       {(() => {
                         const days = t.access_expires_at ? daysLeft(t.access_expires_at) : null
                         if (t.status === 'approved' && days !== null && days <= 0) {

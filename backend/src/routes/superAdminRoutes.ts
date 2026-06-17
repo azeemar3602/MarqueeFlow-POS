@@ -38,12 +38,14 @@ r.post('/login', async (req: Request, res: Response) => {
 r.get('/tenants', superAuth, async (req: Request, res: Response) => {
   try {
     const [rows]: any = await pool.query(`
-      SELECT t.*, u.name as owner_name, u.email as owner_email,
+      SELECT t.*,
+        (SELECT u.name  FROM users u WHERE u.tenant_id=t.id AND u.role='owner' ORDER BY u.id LIMIT 1) as owner_name,
+        (SELECT u.email FROM users u WHERE u.tenant_id=t.id AND u.role='owner' ORDER BY u.id LIMIT 1) as owner_email,
+        (SELECT JSON_UNQUOTE(JSON_EXTRACT(ts.data, '$.shopName')) FROM tenant_settings ts WHERE ts.tenant_id=t.id) as shop_name,
         (SELECT COUNT(*) FROM users WHERE tenant_id=t.id) as user_count,
         (SELECT COUNT(*) FROM users WHERE tenant_id=t.id AND blocked_by_admin=0) as active_user_count,
         CASE WHEN t.access_expires_at IS NOT NULL AND t.access_expires_at < NOW() THEN 1 ELSE 0 END as is_expired
       FROM tenants t
-      LEFT JOIN users u ON u.tenant_id=t.id AND u.role='owner'
       ORDER BY t.created_at DESC
     `)
     res.json(rows)
@@ -191,7 +193,7 @@ r.get('/plan-requests', superAuth, async (req, res) => {
 
 // GET /superadmin/plan-requests/pending-count
 r.get('/plan-requests/pending-count', superAuth, async (req, res) => {
-  const [rows]: any = await pool.query('SELECT COUNT(*) as c FROM plan_upgrade_requests WHERE status=pending')
+  const [rows]: any = await pool.query("SELECT COUNT(*) as c FROM plan_upgrade_requests WHERE status='pending'")
   res.json({ count: rows[0].c })
 })
 
@@ -205,7 +207,7 @@ r.patch('/plan-requests/:id/approve', superAuth, async (req, res) => {
     [req2.requested_plan, req2.requested_user_limit, req2.tenant_id]
   )
   await pool.query(
-    'UPDATE plan_upgrade_requests SET status=approved, resolved_at=NOW() WHERE id=?',
+    "UPDATE plan_upgrade_requests SET status='approved', resolved_at=NOW() WHERE id=?",
     [req.params.id]
   )
   const [prRows]: any = await pool.query('SELECT pur.*, t.name as tenant_name, t.slug as tenant_slug FROM plan_upgrade_requests pur JOIN tenants t ON t.id=pur.tenant_id WHERE pur.id=?', [req.params.id])
@@ -216,7 +218,7 @@ r.patch('/plan-requests/:id/approve', superAuth, async (req, res) => {
 // PATCH /superadmin/plan-requests/:id/reject
 r.patch('/plan-requests/:id/reject', superAuth, async (req, res) => {
   await pool.query(
-    'UPDATE plan_upgrade_requests SET status=rejected, resolved_at=NOW() WHERE id=?',
+    "UPDATE plan_upgrade_requests SET status='rejected', resolved_at=NOW() WHERE id=?",
     [req.params.id]
   )
   res.json({ ok: true })
