@@ -21,7 +21,7 @@ const FEATURES = [
 const ROTATING = ['grocery store', 'pharmacy', 'hardware store', 'general store', 'retail chain']
 
 const TESTIMONIALS = [
-  { lang: 'ur', name: 'محمد عارف', shop: 'کریانہ اسٹور · سلانوالی', initials: 'عا',
+  { lang: 'ur', name: 'اکرم حسین', shop: 'جنرل اسٹور · گوجرانوالہ', initials: 'اح',
     quote: 'اب حساب کتاب بہت آسان ہو گیا ہے۔ بل سیکنڈوں میں بن جاتا ہے اور اردو رسید بھی صاف پرنٹ ہوتی ہے۔' },
   { lang: 'en', name: 'Imran Khan', shop: 'Hardware Store · Lahore', initials: 'IK',
     quote: 'Billing is lightning fast now. We ditched the register completely and customers love the printed receipts.' },
