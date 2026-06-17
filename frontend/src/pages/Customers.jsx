@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, User, ChevronRight, ArrowDownLeft, Pencil, FileText, AlertCircle, Trash2 } from 'lucide-react'
+import { Plus, Search, User, ChevronRight, ArrowDownLeft, Pencil, FileText, AlertCircle, Trash2, Printer, Share2 } from 'lucide-react'
 import api from '../api'
 import { useT } from '../context/SettingsContext'
 
@@ -116,6 +116,20 @@ export default function Customers() {
       <p style="margin-top:20px;color:#888;font-size:11px">Generated ${new Date().toLocaleString('en-PK')}</p>
       </body></html>`)
     win.document.close(); win.focus(); setTimeout(() => win.print(), 350)
+  }
+
+  function shareStatement() {
+    const c = selected
+    const lines = ledger.map(l => `${new Date(l.created_at).toLocaleDateString('en-PK')}  ${l.type}  ${l.amount > 0 ? '+' : ''}${Number(l.amount).toLocaleString()}  (bal ${Number(l.balance_after).toLocaleString()})`).join('\n')
+    const text = `Customer Statement\n${c.name}\nOutstanding: PKR ${Number(c.credit_balance || 0).toLocaleString()}\nTotal Purchases: PKR ${Number(c.total_purchases || 0).toLocaleString()}\n\n${lines || 'No transactions yet'}\n\nGenerated ${new Date().toLocaleString('en-PK')}`
+    const digits = (c.phone || '').replace(/\D/g, '')
+    const waNum = digits ? '92' + digits.replace(/^0/, '') : ''
+    const wa = 'https://wa.me/' + waNum + '?text=' + encodeURIComponent(text)
+    if (navigator.share) {
+      navigator.share({ title: 'Customer Statement', text }).catch(() => window.open(wa, '_blank'))
+    } else {
+      window.open(wa, '_blank')
+    }
   }
 
   const filtered = customers.filter(c =>
@@ -253,7 +267,14 @@ export default function Customers() {
 
       {modal === 'ledger' && selected && (
         <Modal title={selected.name + ' — ' + t('ledger')} onClose={() => setModal(null)}>
-          <button onClick={printStatement} className="btn-secondary w-full flex items-center justify-center gap-2 text-sm mb-3"><FileText size={15} /> {t('printStatement')}</button>
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <button onClick={printStatement} className="btn-secondary flex items-center justify-center gap-2 text-sm py-2.5">
+              <Printer size={15} /> Print
+            </button>
+            <button onClick={shareStatement} className="flex items-center justify-center gap-2 text-sm py-2.5 rounded-xl font-semibold text-white bg-[#25D366] hover:bg-[#1ebe5d] transition-colors">
+              <Share2 size={15} /> Share
+            </button>
+          </div>
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="bg-gray-50 rounded-xl p-3 text-center">
               <p className="text-xl font-bold">PKR {Number(selected.total_purchases || 0).toLocaleString()}</p>
