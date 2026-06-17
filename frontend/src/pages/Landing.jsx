@@ -20,6 +20,21 @@ const FEATURES = [
 
 const ROTATING = ['grocery store', 'pharmacy', 'hardware store', 'general store', 'retail chain']
 
+const TESTIMONIALS = [
+  { lang: 'ur', name: 'محمد عارف', shop: 'کریانہ اسٹور · سلانوالی', initials: 'عا',
+    quote: 'اب حساب کتاب بہت آسان ہو گیا ہے۔ بل سیکنڈوں میں بن جاتا ہے اور اردو رسید بھی صاف پرنٹ ہوتی ہے۔' },
+  { lang: 'en', name: 'Imran Khan', shop: 'Hardware Store · Lahore', initials: 'IK',
+    quote: 'Billing is lightning fast now. We ditched the register completely and customers love the printed receipts.' },
+  { lang: 'ur', name: 'بلال احمد', shop: 'جنرل اسٹور · لاہور', initials: 'با',
+    quote: 'ادھار کا حساب رکھنا اب مشکل نہیں رہا۔ ہر گاہک کا بیلنس میرے سامنے ہوتا ہے۔ بہت بہترین ایپ ہے۔' },
+  { lang: 'en', name: 'Ali Medicos', shop: 'Pharmacy · Multan', initials: 'AM',
+    quote: 'Set up in 10 minutes on my phone. Inventory, credit and daily reports — everything in one place.' },
+  { lang: 'ur', name: 'زاہد بشیر', shop: 'کریانہ · فیصل آباد', initials: 'زب',
+    quote: 'میرا اسٹاف بھی آسانی سے استعمال کر لیتا ہے۔ روزانہ کی رپورٹ سے پتا چل جاتا ہے کتنا کام ہوا۔' },
+  { lang: 'en', name: 'Sana Traders', shop: 'Wholesale · Karachi', initials: 'ST',
+    quote: 'The khata/credit tracking alone is worth it. I finally know exactly who owes what, with no paper.' },
+]
+
 // Scroll-reveal wrapper
 function Reveal({ children, className = '', delay = 0, as: Tag = 'div' }) {
   const ref = useRef(null)
@@ -365,6 +380,46 @@ export default function Landing() {
             </p>
           </div>
         </Reveal>
+      </section>
+
+      {/* Testimonials */}
+      <section className="bg-white py-16">
+        <div className="max-w-6xl mx-auto px-5">
+          <Reveal className="text-center">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold mb-3">
+              <Star size={13} className="fill-amber-400 text-amber-400" /> Loved by 1,200+ shops
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold">Shopkeepers across Pakistan trust RetailPOS</h2>
+            <p className="text-gray-500 mt-2" dir="rtl" style={{ fontFamily: "'Noto Naskh Arabic', serif" }}>پاکستان بھر کے دکاندار ریٹیل پی او ایس پر بھروسہ کرتے ہیں</p>
+          </Reveal>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
+            {TESTIMONIALS.map((t, i) => {
+              const ur = t.lang === 'ur'
+              return (
+                <Reveal key={t.name} delay={(i % 3) * 90}>
+                  <div className="h-full flex flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+                    <div className={'flex gap-0.5 ' + (ur ? 'justify-end' : '')}>
+                      {[0,1,2,3,4].map(s => <Star key={s} size={15} className="fill-amber-400 text-amber-400" />)}
+                    </div>
+                    <p className={'mt-3 flex-1 text-gray-700 ' + (ur ? 'text-right leading-loose text-[15px]' : 'leading-relaxed')}
+                       dir={ur ? 'rtl' : 'ltr'}
+                       style={ur ? { fontFamily: "'Noto Naskh Arabic', serif" } : undefined}>
+                      “{t.quote}”
+                    </p>
+                    <div className={'mt-4 flex items-center gap-3 ' + (ur ? 'flex-row-reverse text-right' : '')}>
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                           style={ur ? { fontFamily: "'Noto Naskh Arabic', serif" } : undefined}>{t.initials}</div>
+                      <div className={ur ? 'text-right' : ''}>
+                        <p className="font-semibold text-gray-900 text-sm" style={ur ? { fontFamily: "'Noto Naskh Arabic', serif" } : undefined}>{t.name}</p>
+                        <p className="text-xs text-gray-400" style={ur ? { fontFamily: "'Noto Naskh Arabic', serif" } : undefined}>{t.shop}</p>
+                      </div>
+                    </div>
+                  </div>
+                </Reveal>
+              )
+            })}
+          </div>
+        </div>
       </section>
 
       {/* Pricing */}
