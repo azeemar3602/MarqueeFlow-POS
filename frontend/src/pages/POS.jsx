@@ -30,6 +30,8 @@ export default function POS() {
   const [custSearch, setCustSearch] = useState('')
   const custRef = useRef(null)
   const scanBusyRef = useRef(false)
+  const quickSavingRef = useRef(false) // guards against double-tap creating duplicates
+  const [quickSaving, setQuickSaving] = useState(false)
   const [discount, setDiscount] = useState(0)
   const [payMethod, setPayMethod] = useState('cash')
   const [paid, setPaid] = useState('')
@@ -117,6 +119,8 @@ export default function POS() {
 
   async function saveQuickCreate() {
     if (!quickCreate.name || !quickCreate.sale_price) return
+    if (quickSavingRef.current) return // already submitting — ignore extra taps
+    quickSavingRef.current = true; setQuickSaving(true)
     try {
       await api.post('/products', {
         name: quickCreate.name,
@@ -138,6 +142,7 @@ export default function POS() {
       // reopen scanner so user continues the in-progress bill
       setShowScanner(true)
     } catch (e) { alert(e.response?.data?.error || e.message) }
+    finally { quickSavingRef.current = false; setQuickSaving(false) }
   }
 
   function addToCart(p, inc = 1) {
@@ -379,9 +384,9 @@ export default function POS() {
                 className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50">
                 Cancel
               </button>
-              <button onClick={saveQuickCreate} disabled={!quickCreate.name || !quickCreate.sale_price}
+              <button onClick={saveQuickCreate} disabled={!quickCreate.name || !quickCreate.sale_price || quickSaving}
                 className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition-colors disabled:opacity-50">
-                Save &amp; Add to Cart
+                {quickSaving ? 'Adding…' : 'Save & Add to Cart'}
               </button>
             </div>
           </div>

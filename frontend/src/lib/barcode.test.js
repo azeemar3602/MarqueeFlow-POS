@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest'
-import { eanUpcChecksumOk, plausible, voteOnRead, REQUIRED_CONFIRMATIONS } from './barcode'
+import { eanUpcChecksumOk, plausible, voteOnRead, acceptRead, REQUIRED_CONFIRMATIONS } from './barcode'
 
 // Known-valid real barcodes
 const EAN13 = '5901234123457'
@@ -67,5 +67,21 @@ describe('voteOnRead (confirmation voting)', () => {
     expect(voteOnRead(s, EAN13)).toBeNull()
     expect(voteOnRead(s, '5901234123450')).toBeNull() // garbage -> reset
     expect(s.count).toBe(0)
+  })
+})
+
+describe('acceptRead (fast path)', () => {
+  test('accepts a checksum-valid EAN/UPC on the FIRST read (instant)', () => {
+    expect(acceptRead({ code: null, count: 0 }, EAN13)).toBe(EAN13)
+    expect(acceptRead({ code: null, count: 0 }, UPC_A)).toBe(UPC_A)
+    expect(acceptRead({ code: null, count: 0 }, EAN8)).toBe(EAN8)
+  })
+  test('rejects a bad-checksum numeric read outright', () => {
+    expect(acceptRead({ code: null, count: 0 }, '5901234123450')).toBeNull()
+  })
+  test('non-checksummable (CODE-128) still needs 2 identical reads', () => {
+    const s = { code: null, count: 0 }
+    expect(acceptRead(s, 'SKU-ABC-001')).toBeNull()   // 1st
+    expect(acceptRead(s, 'SKU-ABC-001')).toBe('SKU-ABC-001') // 2nd -> accepted
   })
 })
