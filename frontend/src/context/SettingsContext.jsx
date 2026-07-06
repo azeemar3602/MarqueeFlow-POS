@@ -15,6 +15,9 @@ export const FALLBACK_SETTINGS = {
   currency: 'PKR', taxPercent: 0,
   language: 'en',
   trackStock: true,
+  onboardingComplete: false,
+  defaultPaymentMethod: 'cash',
+  printMethod: 'rawbt',
 }
 
 export function useT() {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, Plus, Minus, ShoppingCart, Check, User, X, Camera, Receipt as ReceiptIcon, Printer, Pencil, Trash2, UserPlus } from 'lucide-react'
+import { Search, Plus, Minus, ShoppingCart, Check, User, X, Camera, Receipt as ReceiptIcon, Printer, Pencil, Trash2, UserPlus, Star } from 'lucide-react'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
 import { useSettings } from '../context/SettingsContext'
@@ -8,6 +8,7 @@ import Receipt from '../components/Receipt'
 import EditSale from '../components/EditSale'
 import { idbGetProducts, idbGetCategories, idbGetCustomers, idbQueueSale, idbSaveProducts } from '../lib/db'
 import { syncToLocal } from '../lib/offlineSync'
+import { pushRecentProduct, resolveRecentProducts } from '../lib/recentProducts'
 
 // MySQL DECIMAL stock comes back as "67.00" — show whole numbers without trailing
 // zeros (67, not 67.00) while keeping real fractions (4.5 kg stays 4.5).
@@ -48,11 +49,13 @@ export default function POS() {
   const newCustNameRef = useRef(null)
 
   useEffect(() => {
-    // Load from IndexedDB instantly first (works offline)
+    if (settings?.defaultPaymentMethod) setPayMethod(settings.defaultPaymentMethod)
+  }, [settings?.defaultPaymentMethod])
+
+  useEffect(() => {
     idbGetProducts().then(p => { if (p.length) setProducts(p) })
     idbGetCategories().then(c => { if (c.length) setCategories(c) })
     idbGetCustomers().then(c => { if (c.length) setAllCustomers(c) })
-    // Then sync from server if online (updates IndexedDB + state)
     if (navigator.onLine) {
       syncToLocal().then(() => {
         idbGetProducts().then(p => setProducts(p))
@@ -147,6 +150,7 @@ export default function POS() {
 
   function addToCart(p, inc = 1) {
     if (trackStock && Number(p.stock_qty) <= 0) return
+    pushRecentProduct(p.id)
     setCart(c => {
       const ex = c.find(i => i.product_id === p.id)
       if (ex) return c.map(i => i.product_id === p.id ? { ...i, qty: Number((i.qty + inc).toFixed(3)) } : i)
@@ -282,6 +286,8 @@ export default function POS() {
     if (search) return p.name.toLowerCase().includes(search.toLowerCase()) || (p.barcode || '').includes(search)
     return true
   })
+  const favoriteProducts = products.filter(p => p.is_favorite && (!trackStock || Number(p.stock_qty) > 0)).slice(0, 8)
+  const recentProducts = resolveRecentProducts(products).slice(0, 8)
 
   return (
     <div className="lg:flex lg:flex-row lg:gap-4">
@@ -561,6 +567,37 @@ export default function POS() {
             </button>
           ))}
         </div>
+
+        {!search && !catFilter && (favoriteProducts.length > 0 || recentProducts.length > 0) && (
+          <div className="mb-3 space-y-2">
+            {favoriteProducts.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-gray-500 mb-1.5 flex items-center gap-1"><Star size={12} className="text-amber-500" fill="currentColor" /> Quick favorites</p>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {favoriteProducts.map(p => (
+                    <button key={'f' + p.id} onClick={() => addToCart(p)}
+                      className="flex-shrink-0 px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-sm font-semibold text-amber-900 hover:bg-amber-100">
+                      {p.name}<span className="block text-xs font-normal text-amber-700">PKR {Number(p.sale_price).toLocaleString()}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {recentProducts.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-gray-500 mb-1.5">Recently sold</p>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {recentProducts.map(p => (
+                    <button key={'r' + p.id} onClick={() => addToCart(p)}
+                      className="flex-shrink-0 px-3 py-2 rounded-xl bg-indigo-50 border border-indigo-100 text-sm font-semibold text-indigo-900 hover:bg-indigo-100">
+                      {p.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Product grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, CreditCard, ArrowDownLeft, FileText, AlertTriangle, X, CheckCircle, Printer } from 'lucide-react'
+import { Search, CreditCard, ArrowDownLeft, FileText, AlertTriangle, X, CheckCircle, Printer, MessageCircle } from 'lucide-react'
 import api from '../api'
 import { useSettings } from '../context/SettingsContext'
 import { buildPaymentReceipt, printBytesToDefault } from '../lib/bluetoothPrint'
+import { whatsAppCustomerStatement } from '../lib/share'
 
 function Modal({ title, onClose, children }) {
   return (
@@ -206,7 +207,8 @@ export default function Credit() {
 
       {modal === 'ledger' && selected && (
         <Modal title={selected.name + ' — Ledger'} onClose={() => setModal(null)}>
-          <button onClick={printStatement} className="btn-secondary w-full flex items-center justify-center gap-2 text-sm mb-3"><FileText size={15} /> Print / Share Statement</button>
+          <button onClick={printStatement} className="btn-secondary w-full flex items-center justify-center gap-2 text-sm mb-2"><FileText size={15} /> Print / Share Statement</button>
+          <button onClick={() => whatsAppCustomerStatement(selected, selected.credit_balance)} className="btn-secondary w-full flex items-center justify-center gap-2 text-sm mb-3 text-green-700 border-green-200 bg-green-50"><MessageCircle size={15} /> Share on WhatsApp</button>
           <div className="bg-red-50 rounded-xl p-3 text-center mb-3">
             <p className="text-xl font-bold text-red-600">{PKR(selected.credit_balance)}</p>
             <p className="text-xs text-red-400">Outstanding</p>

@@ -4,6 +4,9 @@ import { ShoppingCart, Package, Users, Receipt, BarChart2, LogOut, Menu, X, User
 import { useState } from 'react'
 import { useSettings, useT } from '../context/SettingsContext'
 import { usePwaInstall } from '../lib/pwa'
+import OfflineBanner from './OfflineBanner'
+import SetupWizard from './SetupWizard'
+import HelpButton from './HelpButton'
 
 function MenuFooter({ user }) {
   const { installed, isIos, promptInstall } = usePwaInstall()
@@ -79,6 +82,7 @@ export default function Layout() {
   const { user, logout, hasPermission } = useAuth()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+  const [showWizard, setShowWizard] = useState(true)
   const t = useT()
   const { settings } = useSettings()
   const isRtl = settings?.language === 'ur'
@@ -106,6 +110,20 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col" dir={isRtl ? 'rtl' : 'ltr'}>
+      <OfflineBanner />
+      {user?.accessExpiresAt && (() => {
+        const d = Math.ceil((new Date(user.accessExpiresAt) - new Date()) / 86400000)
+        if (d > 0 && d <= 7) return (
+          <div className="bg-amber-500 text-white text-sm text-center py-2 px-4 font-medium">
+            Your access expires in {d} day{d === 1 ? '' : 's'}. Contact support@marqueeflow.com to renew.
+          </div>
+        )
+        return null
+      })()}
+      {user?.role === 'owner' && showWizard && !settings?.onboardingComplete && (
+        <SetupWizard onComplete={() => setShowWizard(false)} />
+      )}
+      <HelpButton />
       <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
         <div className="flex items-center gap-3">
           <button className="md:hidden p-1.5 rounded-lg hover:bg-gray-100" onClick={() => setOpen(o => !o)}>

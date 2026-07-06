@@ -152,11 +152,50 @@ export default function Settings() {
 
       {/* Inventory */}
       <div className="card p-4">
-        <div className="flex items-center gap-2 text-gray-700 font-semibold text-sm mb-1"><ListChecks size={16} /> Inventory</div>
-        <div className="divide-y divide-gray-100">
+        <div className="flex items-center gap-2 text-gray-700 font-semibold text-sm mb-1"><ListChecks size={16} /> POS defaults</div>
+        <div className="mb-3">
+          <label className="label">Default payment at checkout</label>
+          <div className="grid grid-cols-3 gap-2">
+            {['cash', 'credit', 'card'].map(v => (
+              <button key={v} type="button" onClick={() => set('defaultPaymentMethod', v)}
+                className={'py-2 rounded-xl text-sm font-semibold border-2 capitalize ' +
+                  (form.defaultPaymentMethod === v ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500')}>{v}</button>
+            ))}
+          </div>
+        </div>
+        {form.printFormat === 'thermal' && (
+          <div>
+            <label className="label">Thermal print method</label>
+            <div className="grid grid-cols-3 gap-2">
+              {[{ v: 'rawbt', t: 'RawBT (Android)' }, { v: 'bluetooth', t: 'Bluetooth' }, { v: 'browser', t: 'Browser' }].map(o => (
+                <button key={o.v} type="button" onClick={() => set('printMethod', o.v)}
+                  className={'py-2 rounded-xl text-xs font-semibold border-2 ' +
+                    (form.printMethod === o.v ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500')}>{o.t}</button>
+              ))}
+            </div>
+            <p className="text-xs text-gray-400 mt-2">Urdu text on thermal prints as a bitmap image (slower but correct). English uses fast text mode.</p>
+          </div>
+        )}
+        <div className="divide-y divide-gray-100 mt-3">
           <Toggle label="Stock tracking"
-            hint="Turn on to track stock quantity and low-stock alerts on products. Turn off if you don't manage stock."
+            hint="Track stock quantity and low-stock alerts."
             value={form.trackStock !== false} onChange={v => set('trackStock', v)} />
+        </div>
+      </div>
+
+      {/* Receipt preview */}
+      <div className="card p-4">
+        <div className="flex items-center gap-2 text-gray-700 font-semibold text-sm mb-3"><Printer size={16} /> Receipt preview</div>
+        <div className="mx-auto max-w-[280px] bg-white border-2 border-dashed border-gray-200 rounded-lg p-4 font-mono text-xs text-gray-800 shadow-inner">
+          <p className="text-center font-bold text-sm">{form.shopName || 'Your Shop'}</p>
+          {form.phone && <p className="text-center text-gray-500">{form.phone}</p>}
+          {form.address && <p className="text-center text-gray-500 text-[10px] mt-0.5">{form.address}</p>}
+          <hr className="my-2 border-gray-300 border-dashed" />
+          <div className="flex justify-between"><span>Sample Item</span><span>PKR 120</span></div>
+          <hr className="my-2 border-gray-300 border-dashed" />
+          <div className="flex justify-between font-bold"><span>Total</span><span>{form.currency || 'PKR'} 120</span></div>
+          <p className="text-center text-gray-400 mt-2 text-[10px]">{form.footer || 'Thank you!'}</p>
+          <p className="text-center text-[9px] text-gray-300 mt-1">Powered by MarqueeFlow POS</p>
         </div>
       </div>
     </div>

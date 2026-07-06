@@ -1,4 +1,4 @@
-import { mailCompanyApproved, mailCompanyRejected, mailUserDisabled, mailPlanRequest } from "../mailer"
+import { mailCompanyApproved, mailCompanyRejected, mailUserDisabled, mailPlanRequest, mailOwnerApproved, mailOwnerRejected, mailOwnerPlanApproved } from "../mailer"
 import { Router, Request, Response } from 'express'
 import bcrypt from 'bcryptjs'
 import { pool } from '../db'
@@ -198,6 +198,16 @@ r.patch('/tenants/:id/approve', superAuth, async (req: Request, res: Response) =
       `UPDATE tenants SET status='approved', active=1, approved_at=NOW(), rejection_reason=NULL, user_limit=?, access_expires_at=${expiresSql} WHERE id=?`,
       [userLimit, req.params.id]
     )
+    const [tRows]: any = await pool.query(
+      `SELECT t.name, t.slug, t.plan, t.access_expires_at,
+        (SELECT u.email FROM users u WHERE u.tenant_id=t.id AND u.role='owner' LIMIT 1) as owner_email
+       FROM tenants t WHERE t.id=?`, [req.params.id]
+    )
+    if (tRows.length) {
+      const t = tRows[0]
+      mailCompanyApproved({ name: t.name, slug: t.slug, plan: t.plan })
+      if (t.owner_email) mailOwnerApproved({ name: t.name, plan: t.plan, email: t.owner_email, expiresAt: t.access_expires_at })
+    }
     res.json({ ok: true })
   } catch (e: any) { res.status(500).json({ error: e.message }) }
 })
@@ -275,8 +285,15 @@ r.patch('/tenants/:id/reject', superAuth, async (req: Request, res: Response) =>
       "UPDATE tenants SET status='rejected', active=0, rejection_reason=? WHERE id=?",
       [reason || 'Your request was not approved.', req.params.id]
     )
-    const [tRej]: any = await pool.query('SELECT name, slug FROM tenants WHERE id=?', [req.params.id])
-    if (tRej.length) mailCompanyRejected({ ...tRej[0], reason })
+    const [tRej]: any = await pool.query(
+      `SELECT t.name, t.slug,
+        (SELECT u.email FROM users u WHERE u.tenant_id=t.id AND u.role='owner' LIMIT 1) as owner_email
+       FROM tenants t WHERE t.id=?`, [req.params.id]
+    )
+    if (tRej.length) {
+      mailCompanyRejected({ ...tRej[0], reason })
+      if (tRej[0].owner_email) mailOwnerRejected({ name: tRej[0].name, email: tRej[0].owner_email, reason })
+    }
     res.json({ ok: true })
   } catch (e: any) { res.status(500).json({ error: e.message }) }
 })
@@ -341,8 +358,14 @@ r.patch('/plan-requests/:id/approve', superAuth, async (req, res) => {
       "UPDATE plan_upgrade_requests SET status='approved', resolved_at=NOW() WHERE id=?",
       [req.params.id]
     )
-    const [prRows]: any = await pool.query('SELECT pur.*, t.name as tenant_name, t.slug as tenant_slug FROM plan_upgrade_requests pur JOIN tenants t ON t.id=pur.tenant_id WHERE pur.id=?', [req.params.id])
-    if (prRows.length) { const r2 = prRows[0]; try { mailPlanRequest({name:r2.tenant_name,slug:r2.tenant_slug}, r2.current_plan, r2.requested_plan, r2.current_user_limit, r2.requested_user_limit) } catch {} }
+    const [prRows]: any = await pool.query(
+      `SELECT pur.*, t.name as tenant_name,
+        (SELECT u.email FROM users u WHERE u.tenant_id=t.id AND u.role='owner' LIMIT 1) as owner_email
+       FROM plan_upgrade_requests pur JOIN tenants t ON t.id=pur.tenant_id WHERE pur.id=?`, [req.params.id]
+    )
+    if (prRows.length && prRows[0].owner_email) {
+      mailOwnerPlanApproved({ name: prRows[0].tenant_name, email: prRows[0].owner_email, plan: prRows[0].requested_plan, userLimit: prRows[0].requested_user_limit })
+    }
     res.json({ ok: true })
   } catch (e: any) { res.status(500).json({ error: e.message }) }
 })

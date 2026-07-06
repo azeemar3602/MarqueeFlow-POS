@@ -56,7 +56,7 @@ export default function SuperAdmin() {
   const [planRequests, setPlanRequests] = useState([])
   const [usageTenant, setUsageTenant] = useState(null)   // tenant for usage report
   const [overview, setOverview] = useState(null)          // platform-wide daily KPIs + active flags
-  const [view, setView] = useState('companies')           // dashboard | companies | plans
+  const [view, setView] = useState('dashboard')           // dashboard | companies | plans
   const [statusFilter, setStatusFilter] = useState('all') // all | pending | approved | rejected
   const [activityFilter, setActivityFilter] = useState('all') // all | active | inactive
   const [search, setSearch] = useState('')
@@ -168,7 +168,13 @@ export default function SuperAdmin() {
     navigate('/superadmin/login')
   }
 
-  const pendingCount = tenants.filter(t => t.status === 'pending').length
+  const pendingList = tenants.filter(t => t.status === 'pending')
+  const pendingCount = pendingList.length
+  const expiringSoon = tenants.filter(t => {
+    if (t.status !== 'approved' || !t.access_expires_at) return false
+    const d = daysLeft(t.access_expires_at)
+    return d !== null && d > 0 && d <= 7
+  })
   const planPending = planRequests.filter(r => r.status === 'pending').length
   const counts = {
     pending: tenants.filter(t => t.status === 'pending').length,
@@ -230,6 +236,47 @@ export default function SuperAdmin() {
         {/* ── DASHBOARD ── */}
         {view === 'dashboard' && (
           <div className="space-y-5">
+            {(pendingCount > 0 || expiringSoon.length > 0 || planPending > 0) && (
+              <div className="space-y-3">
+                {pendingCount > 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-bold text-amber-800">{pendingCount} pending approval{pendingCount > 1 ? 's' : ''}</p>
+                      <button onClick={() => { setView('companies'); setStatusFilter('pending') }} className="text-xs font-semibold text-amber-700 underline">Review all</button>
+                    </div>
+                    <div className="space-y-2">
+                      {pendingList.slice(0, 3).map(t => (
+                        <div key={t.id} className="flex items-center justify-between bg-white rounded-xl px-3 py-2 border border-amber-100">
+                          <div><p className="font-semibold text-sm">{t.name}</p><p className="text-xs text-gray-400">{t.owner_email}</p></div>
+                          <button onClick={() => { setApproveModal(t); setApproveUsers(t.user_limit || 1) }} className="text-xs font-bold px-3 py-1.5 rounded-lg bg-green-600 text-white">Approve</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {expiringSoon.length > 0 && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
+                    <p className="font-bold text-orange-800 mb-2">Expiring within 7 days</p>
+                    <div className="space-y-2">
+                      {expiringSoon.slice(0, 5).map(t => (
+                        <div key={t.id} className="flex items-center justify-between bg-white rounded-xl px-3 py-2 border border-orange-100 text-sm">
+                          <span className="font-medium">{t.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-orange-600 text-xs">{daysLeft(t.access_expires_at)}d left</span>
+                            <button onClick={() => setExtendModal(t)} className="text-xs font-bold px-2 py-1 rounded-lg bg-indigo-600 text-white">Extend</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {planPending > 0 && (
+                  <button onClick={() => setView('plans')} className="w-full text-left bg-purple-50 border border-purple-200 rounded-2xl p-4 font-semibold text-purple-800 text-sm">
+                    {planPending} plan upgrade request{planPending > 1 ? 's' : ''} awaiting review →
+                  </button>
+                )}
+              </div>
+            )}
             {overview ? (
               <div>
                 <div className="flex items-center justify-between mb-2">

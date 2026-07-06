@@ -1,4 +1,4 @@
-import { mailNewRegistration, mailTrialStarted } from "../mailer"
+import { mailNewRegistration, mailTrialStarted, mailOwnerExpiryReminder } from "../mailer"
 import { Router } from 'express'
 import { redis } from '../index'
 import rateLimit from 'express-rate-limit'
@@ -84,6 +84,15 @@ r.post('/login', loginLimiter, async (req, res) => {
     if (user.access_expires_at && new Date(user.access_expires_at) < new Date()) return res.status(403).json({ error: 'blocked', message: 'Your account access has expired. Please contact the administrator to renew your access.' })
     const token = signToken({ id: user.id, tenantId: user.tenant_id, role: user.role, name: user.name, email: user.email })
     const permissions = user.permissions ? (typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions) : null
+    if (user.access_expires_at) {
+      const daysLeft = Math.ceil((new Date(user.access_expires_at).getTime() - Date.now()) / 86400000)
+      if (daysLeft > 0 && daysLeft <= 7) {
+        const key = `expiry_reminder:${user.tenant_id}:${daysLeft}`
+        redis.set(key, '1', 'EX', 86400, 'NX').then(sent => {
+          if (sent) mailOwnerExpiryReminder({ name: user.tenantName, email: user.email, daysLeft, expiresAt: user.access_expires_at })
+        }).catch(() => {})
+      }
+    }
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, tenantId: user.tenant_id, tenantName: user.tenantName, tenantSlug: user.slug, permissions, plan: user.plan, userLimit: user.user_limit, accessExpiresAt: user.access_expires_at } })
   } catch (e: any) { res.status(500).json({ error: e.message }) }
 })

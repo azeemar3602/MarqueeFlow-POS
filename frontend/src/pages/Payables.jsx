@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, Wallet, ArrowUpRight, FileText, AlertTriangle, X, CheckCircle, Plus, Pencil, Trash2, Link2, Copy } from 'lucide-react'
+import { Search, Wallet, ArrowUpRight, FileText, AlertTriangle, X, CheckCircle, Plus, Pencil, Trash2, Link2, Copy, MessageCircle } from 'lucide-react'
 import api from '../api'
 import { useT } from '../context/SettingsContext'
+import { whatsAppSupplierStatement } from '../lib/share'
 
 function Modal({ title, onClose, children }) {
   return (
@@ -271,6 +272,7 @@ export default function Payables() {
           {shareLink && (
             <div className="flex gap-2 mb-3">
               <button onClick={copyLink} className="btn-secondary flex-1 flex items-center justify-center gap-1 text-sm"><Copy size={14} /> {t('copyPublicLink')}</button>
+              <button onClick={() => whatsAppSupplierStatement(selected, selected.balance, shareLink)} className="btn-secondary flex-1 flex items-center justify-center gap-1 text-sm text-green-700"><MessageCircle size={14} /> WhatsApp</button>
               <button onClick={rotateLink} disabled={saving} className="btn-secondary px-3" title="Rotate link"><Link2 size={16} /></button>
             </div>
           )}
