@@ -1,0 +1,33 @@
+name: VPS MySQL Diagnose (read-only)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: MySQL diagnostics on VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_SSH_HOST }}
+          username: ${{ secrets.VPS_SSH_USER }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          script: |
+            set +e
+            echo "=== MySQL diagnostics (read-only) ==="
+            which mysql mariadb 2>/dev/null
+            systemctl is-active mysql mariadb 2>/dev/null
+            ss -tlnp | grep -E '3306|3307' || echo "no 3306 listener"
+            ls -la /run/mysqld/ /var/run/mysqld/ 2>/dev/null
+            docker ps 2>/dev/null | grep -iE 'mysql|maria' || echo "no mysql docker"
+            echo "--- marqueeflow .env keys (no values) ---"
+            grep -E '^[A-Z_]+=' /var/www/marqueeflow/backend/.env 2>/dev/null | cut -d= -f1
+            echo "--- pm2 marqueeflow ---"
+            pm2 jlist 2>/dev/null | head -c 2000
+            echo ""
+            echo "--- try mysql no-args ---"
+            mysql -e "SELECT 1" 2>&1 | head -3
+            echo "--- try localhost ---"
+            mysql -h localhost -e "SELECT 1" 2>&1 | head -3
