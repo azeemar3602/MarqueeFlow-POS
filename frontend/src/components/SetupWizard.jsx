@@ -42,11 +42,10 @@ export default function SetupWizard({ onComplete }) {
     return () => window.removeEventListener('pos:open-onboarding', open)
   }, [])
 
+  // Hide floating help button while guide is open (avoids blocking Next on mobile)
   useEffect(() => {
-    if (!settings?.onboardingProgress) return
-    const idx = ONBOARDING_STEPS.findIndex(s => !settings.onboardingProgress[s.id])
-    if (idx >= 0) setStepIndex(idx)
-  }, [settings?.tenantId])
+    window.dispatchEvent(new CustomEvent('pos:wizard-visible', { detail: { open: expanded && !hidden } }))
+  }, [expanded, hidden])
 
   const persistProgress = useCallback(async (nextProgress, complete = false) => {
     const payload = {
@@ -59,7 +58,9 @@ export default function SetupWizard({ onComplete }) {
 
   const markStep = useCallback(async (id, done = true) => {
     const next = { ...emptyProgress(), ...(settings?.onboardingProgress || {}), [id]: done }
-    await persistProgress(next, allRequiredDone(next))
+    try {
+      await persistProgress(next, allRequiredDone(next))
+    } catch { /* non-blocking */ }
   }, [settings?.onboardingProgress, persistProgress])
 
   // Auto-complete when visiting a step's screen
@@ -115,6 +116,22 @@ export default function SetupWizard({ onComplete }) {
     }
     const r = await promptInstall()
     if (r === 'accepted') await markStep('install', true)
+  }
+
+  function nextStep() {
+    if (stepIndex >= total - 1) { finish(); return }
+    const next = stepIndex + 1
+    setStepIndex(next)
+    const s = ONBOARDING_STEPS[next]
+    if (s?.path) navigate(s.path)
+  }
+
+  function prevStep() {
+    if (stepIndex <= 0) return
+    const prev = stepIndex - 1
+    setStepIndex(prev)
+    const s = ONBOARDING_STEPS[prev]
+    if (s?.path) navigate(s.path)
   }
 
   function goToStep(i) {
@@ -251,7 +268,7 @@ export default function SetupWizard({ onComplete }) {
           </button>
         </div>
 
-        <div className="flex-shrink-0 border-t border-slate-100 p-3 space-y-2 bg-white">
+        <div className="flex-shrink-0 border-t border-slate-100 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] space-y-2 bg-white">
           <div className="flex gap-2">
             {step.path && (
               <button type="button" onClick={() => navigate(step.path)}
@@ -267,12 +284,12 @@ export default function SetupWizard({ onComplete }) {
             </button>
           </div>
           <div className="flex gap-2">
-            <button type="button" disabled={stepIndex === 0} onClick={() => goToStep(stepIndex - 1)}
-              className="btn-secondary flex-1 text-sm py-2 flex items-center justify-center gap-1 disabled:opacity-40">
+            <button type="button" disabled={stepIndex === 0} onClick={prevStep}
+              className="btn-secondary flex-1 text-sm py-3 flex items-center justify-center gap-1 disabled:opacity-40">
               <ArrowLeft size={14} /> Back
             </button>
-            <button type="button" onClick={() => stepIndex < total - 1 ? goToStep(stepIndex + 1) : finish()}
-              className="btn-primary flex-1 text-sm py-2 flex items-center justify-center gap-1">
+            <button type="button" onClick={nextStep}
+              className="btn-primary flex-1 text-sm py-3 flex items-center justify-center gap-1">
               {stepIndex < total - 1 ? <>Next <ArrowRight size={14} /></> : 'Finish setup'}
             </button>
           </div>

@@ -16,11 +16,16 @@ export default function SuperAdminLogin() {
     e.preventDefault()
     setLoading(true); setError('')
     try {
-      const { data } = await saApi.post('/superadmin/login', form)
+      const { data } = await saApi.post('/superadmin/login', { email: form.email.trim(), password: form.password })
       localStorage.setItem('sa_token', data.token)
       localStorage.setItem('sa_admin', JSON.stringify(data.admin))
       navigate('/superadmin')
-    } catch (e) { setError(e.response?.data?.error || apiErrorMessage(e) || 'Login failed') }
+    } catch (e) {
+      const err = e.response?.data?.error
+      setError(err === 'Invalid credentials'
+        ? 'Wrong email or password. Default: support@marqueeflow.com / MarqueeFlowPOS2026!'
+        : (err || apiErrorMessage(e) || 'Login failed'))
+    }
     setLoading(false)
   }
 

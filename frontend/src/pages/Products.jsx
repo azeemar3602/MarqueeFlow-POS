@@ -436,7 +436,7 @@ export default function Products() {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+      <div className="mb-4 space-y-3">
         <div>
           <h1 className="text-xl font-bold text-gray-900">{t('products')}</h1>
           <p className="text-gray-500 text-sm">
@@ -444,11 +444,11 @@ export default function Products() {
             {lowCount > 0 && <span className="text-red-500 ml-2">· {lowCount} {t('lowStockCount')}</span>}
           </p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={() => setCatModal(true)} className="btn-secondary text-sm">{t('addCategory')}</button>
-          <button onClick={printStock} className="btn-secondary flex items-center gap-2 text-sm"><Printer size={16} /> Print Stock</button>
-          <button onClick={() => { setImportModal(true); setImportRows([]); setImportResult(null) }} className="btn-secondary flex items-center gap-2 text-sm"><Upload size={16} /> Import</button>
-          <button onClick={openAdd} className="btn-primary flex items-center gap-2 text-sm"><Plus size={16} /> {t('addProduct')}</button>
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+          <button onClick={() => setCatModal(true)} className="btn-secondary text-sm whitespace-nowrap flex-shrink-0">{t('addCategory')}</button>
+          <button onClick={printStock} className="btn-secondary flex items-center gap-1.5 text-sm whitespace-nowrap flex-shrink-0"><Printer size={15} /> Print</button>
+          <button onClick={() => { setImportModal(true); setImportRows([]); setImportResult(null) }} className="btn-secondary flex items-center gap-1.5 text-sm whitespace-nowrap flex-shrink-0"><Upload size={15} /> Import</button>
+          <button onClick={openAdd} className="btn-primary flex items-center gap-1.5 text-sm whitespace-nowrap flex-shrink-0"><Plus size={16} /> {t('addProduct')}</button>
         </div>
       </div>
 

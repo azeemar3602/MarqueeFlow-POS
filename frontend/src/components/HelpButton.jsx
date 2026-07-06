@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { HelpCircle, X, ShoppingCart, Package, CreditCard, Printer, Wifi, BookOpen } from 'lucide-react'
 import { openOnboardingGuide } from './SetupWizard'
 
@@ -13,6 +13,13 @@ const TOPICS = [
 
 export default function HelpButton() {
   const [open, setOpen] = useState(false)
+  const [wizardOpen, setWizardOpen] = useState(false)
+
+  useEffect(() => {
+    const onWizard = (e) => setWizardOpen(!!e.detail?.open)
+    window.addEventListener('pos:wizard-visible', onWizard)
+    return () => window.removeEventListener('pos:wizard-visible', onWizard)
+  }, [])
 
   function onTopic(t) {
     if (t.action === 'guide') {
@@ -20,6 +27,8 @@ export default function HelpButton() {
       openOnboardingGuide()
     }
   }
+
+  if (wizardOpen) return null
 
   return (
     <>

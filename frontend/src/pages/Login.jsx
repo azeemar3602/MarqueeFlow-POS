@@ -23,7 +23,7 @@ export default function Login() {
     e.preventDefault()
     setLoading(true); setError('')
     try {
-      const { data } = await api.post('/auth/login', form)
+      const { data } = await api.post('/auth/login', { email: form.email.trim(), password: form.password })
       login(data.token, data.user)
       navigate('/')
     } catch (e) {
@@ -35,6 +35,8 @@ export default function Login() {
         setError('rejected:' + (msg || 'Your registration was rejected. Please contact support.'))
       } else if (err === 'blocked') {
         setError('blocked:' + (msg || 'Your account access has expired. Please contact the administrator.'))
+      } else if (err === 'Invalid credentials') {
+        setError('Wrong phone/email or password. Super Admin? Use /superadmin/login instead.')
       } else {
         setError(msg || err || apiErrorMessage(e))
       }
