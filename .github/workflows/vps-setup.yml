@@ -1,0 +1,177 @@
+name: VPS One-Time Setup + Deploy POS
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+          - both
+
+jobs:
+  setup-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup and deploy MarqueeFlow POS (isolated paths only)
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_SSH_HOST }}
+          username: ${{ secrets.VPS_SSH_USER }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          timeout: 120s
+          command_timeout: 30m
+          script: |
+            set -euo pipefail
+            export ENV_TARGET="${{ github.event.inputs.environment }}"
+
+            echo "=== MarqueeFlow POS setup (does NOT touch marqueeflow/alurate) ==="
+
+            # Directories (POS only)
+            for d in \
+              /var/www/marqueeflow-pos-repo \
+              /var/www/marqueeflow-pos/dist \
+              /var/www/marqueeflow-pos-staging/dist \
+              /var/www/marqueeflow-pos-backend/dist \
+              /var/www/marqueeflow-pos-backend-staging/dist \
+              /var/www/marqueeflow-pos-uploads \
+              /var/www/marqueeflow-pos-staging-uploads \
+              /var/log/marqueeflow-pos \
+              /root/backups/marqueeflow-pos/daily; do
+              mkdir -p "$d"
+            done
+
+            # Clone or update repo
+            if [ ! -d /var/www/marqueeflow-pos-repo/.git ]; then
+              git clone https://github.com/azeemar3602/MarqueeFlow-POS.git /var/www/marqueeflow-pos-repo
+            fi
+            cd /var/www/marqueeflow-pos-repo
+            git fetch origin
+            git checkout main
+            git reset --hard origin/main
+
+            # Generate secrets file if missing (POS only)
+            SECRETS_FILE=/root/.marqueeflow-pos-secrets
+            if [ ! -f "$SECRETS_FILE" ]; then
+              JWT_PROD=$(openssl rand -hex 32)
+              JWT_STG=$(openssl rand -hex 32)
+              DB_PASS=$(openssl rand -hex 16)
+              cat > "$SECRETS_FILE" <<EOF
+            MF_POS_DB_PASS=$DB_PASS
+            MF_POS_JWT_PROD=$JWT_PROD
+            MF_POS_JWT_STG=$JWT_STG
+            EOF
+              chmod 600 "$SECRETS_FILE"
+            fi
+            source "$SECRETS_FILE"
+
+            # MySQL databases (POS only)
+            mysql -e "CREATE DATABASE IF NOT EXISTS marqueeflow_pos_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+            mysql -e "CREATE DATABASE IF NOT EXISTS marqueeflow_pos_db_staging CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+            mysql -e "CREATE USER IF NOT EXISTS 'mf_pos_user'@'localhost' IDENTIFIED BY '${MF_POS_DB_PASS}';" || true
+            mysql -e "ALTER USER 'mf_pos_user'@'localhost' IDENTIFIED BY '${MF_POS_DB_PASS}';"
+            mysql -e "GRANT ALL ON marqueeflow_pos_db.* TO 'mf_pos_user'@'localhost';"
+            mysql -e "GRANT ALL ON marqueeflow_pos_db_staging.* TO 'mf_pos_user'@'localhost';"
+            mysql -e "FLUSH PRIVILEGES;"
+
+            # Migrations
+            for db in marqueeflow_pos_db_staging marqueeflow_pos_db; do
+              for f in /var/www/marqueeflow-pos-repo/backend/migrations/*.sql; do
+                [ -f "$f" ] || continue
+                mysql "$db" < "$f" 2>/dev/null || true
+              done
+            done
+
+            deploy_env() {
+              local ENV="$1"
+              local BRANCH PORT DB JWT UPLOAD BACKEND_DIR FRONTEND_DIR PM2_NAME ECOSYSTEM
+              if [ "$ENV" = "staging" ]; then
+                BRANCH=staging; PORT=8088; DB=marqueeflow_pos_db_staging
+                JWT="$MF_POS_JWT_STG"; UPLOAD=/var/www/marqueeflow-pos-staging-uploads
+                BACKEND_DIR=/var/www/marqueeflow-pos-backend-staging
+                FRONTEND_DIR=/var/www/marqueeflow-pos-staging/dist
+                PM2_NAME=marqueeflow-pos-backend-staging
+              else
+                BRANCH=main; PORT=8085; DB=marqueeflow_pos_db
+                JWT="$MF_POS_JWT_PROD"; UPLOAD=/var/www/marqueeflow-pos-uploads
+                BACKEND_DIR=/var/www/marqueeflow-pos-backend
+                FRONTEND_DIR=/var/www/marqueeflow-pos/dist
+                PM2_NAME=marqueeflow-pos-backend
+              fi
+
+              cd /var/www/marqueeflow-pos-repo
+              git fetch origin
+              git checkout "$BRANCH"
+              git reset --hard "origin/$BRANCH"
+
+              cd backend && npm ci && npm run build
+              rsync -a --delete dist/ "$BACKEND_DIR/dist/"
+              cp package.json package-lock.json "$BACKEND_DIR/"
+              cd "$BACKEND_DIR" && npm ci --omit=dev
+
+              cat > "$BACKEND_DIR/ecosystem.config.cjs" <<ECO
+            module.exports = {
+              apps: [{
+                name: '$PM2_NAME',
+                script: './dist/index.js',
+                cwd: '$BACKEND_DIR',
+                instances: $([ "$ENV" = "staging" ] && echo 1 || echo 2),
+                exec_mode: '$([ "$ENV" = "staging" ] && echo fork || echo cluster)',
+                env: {
+                  NODE_ENV: '$([ "$ENV" = "staging" ] && echo staging || echo production)',
+                  PORT: $PORT,
+                  DB_HOST: '127.0.0.1',
+                  DB_USER: 'mf_pos_user',
+                  DB_PASSWORD: '$MF_POS_DB_PASS',
+                  DB_NAME: '$DB',
+                  JWT_SECRET: '$JWT',
+                  UPLOAD_DIR: '$UPLOAD',
+                  APP_URL: '$([ "$ENV" = "staging" ] && echo https://staging.pos.marqueeflow.com || echo https://pos.marqueeflow.com)',
+                  ADMIN_EMAIL: 'support@marqueeflow.com',
+                  MAIL_HOST: 'smtp.hostinger.com',
+                  MAIL_PORT: '465',
+                  MAIL_USER: 'support@marqueeflow.com',
+                },
+              }],
+            };
+            ECO
+
+              if pm2 describe "$PM2_NAME" >/dev/null 2>&1; then
+                pm2 reload "$BACKEND_DIR/ecosystem.config.cjs"
+              else
+                pm2 start "$BACKEND_DIR/ecosystem.config.cjs"
+              fi
+
+              cd /var/www/marqueeflow-pos-repo/frontend
+              npm ci && npm run build
+              rsync -a --delete dist/ "$FRONTEND_DIR/"
+              echo "Deployed $ENV on port $PORT"
+            }
+
+            if [ "$ENV_TARGET" = "staging" ] || [ "$ENV_TARGET" = "both" ]; then
+              deploy_env staging
+            fi
+            if [ "$ENV_TARGET" = "production" ] || [ "$ENV_TARGET" = "both" ]; then
+              deploy_env production
+            fi
+            pm2 save
+
+            # nginx (POS vhosts only — new files)
+            cp /var/www/marqueeflow-pos-repo/deploy/nginx/pos.marqueeflow.com.conf /etc/nginx/sites-available/
+            cp /var/www/marqueeflow-pos-repo/deploy/nginx/staging.pos.marqueeflow.com.conf /etc/nginx/sites-available/
+            ln -sf /etc/nginx/sites-available/pos.marqueeflow.com.conf /etc/nginx/sites-enabled/
+            ln -sf /etc/nginx/sites-available/staging.pos.marqueeflow.com.conf /etc/nginx/sites-enabled/
+
+            # SSL if DNS ready
+            certbot --nginx -d pos.marqueeflow.com --non-interactive --agree-tos -m support@marqueeflow.com || true
+            certbot --nginx -d staging.pos.marqueeflow.com --non-interactive --agree-tos -m support@marqueeflow.com || true
+            nginx -t && systemctl reload nginx
+
+            echo "=== POS setup complete ==="
+            pm2 list | grep -E 'marqueeflow-pos|marqueeflow-backend|alurate' || pm2 list
