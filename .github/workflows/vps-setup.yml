@@ -38,17 +38,59 @@ jobs:
             fi
             MYSQL="$(command -v mysql)"
 
-            # Shared MySQL on VPS — read MarqueeFlow backend .env for admin creds (read-only, no changes to MarqueeFlow)
+            # Shared MySQL on VPS — discover working connection (read-only; does not modify MarqueeFlow/AluRate)
             DB_HOST="127.0.0.1"
             DB_ADMIN_USER="root"
             DB_ADMIN_PASS=""
-            if [ -f /var/www/marqueeflow/backend/.env ]; then
-              set -a; source /var/www/marqueeflow/backend/.env; set +a
-              DB_HOST="${DB_HOST:-127.0.0.1}"
-              DB_ADMIN_USER="${DB_USER:-root}"
-              DB_ADMIN_PASS="${DB_PASSWORD:-}"
-            elif [ -f /root/.my.cnf ]; then
-              DB_ADMIN_USER="root"
+            POS_DB_HOST="localhost"
+            MYSQL_ARGS=()
+
+            mysql_ok() {
+              "$MYSQL" "$@" -e "SELECT 1" >/dev/null 2>&1
+            }
+
+            if [ -f /root/.my.cnf ] && mysql_ok; then
+              MYSQL_ARGS=()
+              POS_DB_HOST="localhost"
+              echo "MySQL: using /root/.my.cnf"
+            fi
+
+            if [ ${#MYSQL_ARGS[@]} -eq 0 ] && ! mysql_ok; then
+              for envf in /var/www/marqueeflow/backend/.env /var/www/marqueeflow-staging/backend/.env; do
+                if [ -f "$envf" ]; then
+                  set -a; source "$envf"; set +a
+                  DB_HOST="${DB_HOST:-127.0.0.1}"
+                  DB_ADMIN_USER="${DB_USER:-root}"
+                  DB_ADMIN_PASS="${DB_PASSWORD:-}"
+                  echo "MySQL: loaded creds from $envf (host=$DB_HOST user=$DB_ADMIN_USER)"
+                  break
+                fi
+              done
+              for host in "$DB_HOST" localhost 127.0.0.1; do
+                if mysql_ok -h "$host" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"}; then
+                  MYSQL_ARGS=(-h "$host" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"})
+                  POS_DB_HOST="$host"
+                  echo "MySQL: connected via TCP host=$host"
+                  break
+                fi
+              done
+              if [ ${#MYSQL_ARGS[@]} -eq 0 ]; then
+                for sock in /run/mysqld/mysqld.sock /var/run/mysqld/mysqld.sock /tmp/mysql.sock; do
+                  if [ -S "$sock" ] && mysql_ok --socket="$sock" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"}; then
+                    MYSQL_ARGS=(--socket="$sock" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"})
+                    POS_DB_HOST="localhost"
+                    echo "MySQL: connected via socket $sock"
+                    break
+                  fi
+                done
+              fi
+            fi
+
+            if [ ${#MYSQL_ARGS[@]} -eq 0 ] && ! mysql_ok; then
+              echo "ERROR: Could not connect to MySQL on this VPS"
+              ss -tlnp 2>/dev/null | grep -E '3306|3307' || true
+              ls -la /run/mysqld/ /var/run/mysqld/ 2>/dev/null || true
+              exit 1
             fi
 
             # Directories (POS only)
@@ -89,19 +131,19 @@ jobs:
             fi
             source "$SECRETS_FILE"
 
-            "$MYSQL" -h "$DB_HOST" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"} -e "CREATE DATABASE IF NOT EXISTS marqueeflow_pos_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-            "$MYSQL" -h "$DB_HOST" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"} -e "CREATE DATABASE IF NOT EXISTS marqueeflow_pos_db_staging CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-            "$MYSQL" -h "$DB_HOST" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"} -e "CREATE USER IF NOT EXISTS 'mf_pos_user'@'localhost' IDENTIFIED BY '${MF_POS_DB_PASS}';" || true
-            "$MYSQL" -h "$DB_HOST" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"} -e "ALTER USER 'mf_pos_user'@'localhost' IDENTIFIED BY '${MF_POS_DB_PASS}';"
-            "$MYSQL" -h "$DB_HOST" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"} -e "GRANT ALL ON marqueeflow_pos_db.* TO 'mf_pos_user'@'localhost';"
-            "$MYSQL" -h "$DB_HOST" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"} -e "GRANT ALL ON marqueeflow_pos_db_staging.* TO 'mf_pos_user'@'localhost';"
-            "$MYSQL" -h "$DB_HOST" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"} -e "FLUSH PRIVILEGES;"
+            "$MYSQL" "${MYSQL_ARGS[@]}" -e "CREATE DATABASE IF NOT EXISTS marqueeflow_pos_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+            "$MYSQL" "${MYSQL_ARGS[@]}" -e "CREATE DATABASE IF NOT EXISTS marqueeflow_pos_db_staging CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+            "$MYSQL" "${MYSQL_ARGS[@]}" -e "CREATE USER IF NOT EXISTS 'mf_pos_user'@'localhost' IDENTIFIED BY '${MF_POS_DB_PASS}';" || true
+            "$MYSQL" "${MYSQL_ARGS[@]}" -e "ALTER USER 'mf_pos_user'@'localhost' IDENTIFIED BY '${MF_POS_DB_PASS}';"
+            "$MYSQL" "${MYSQL_ARGS[@]}" -e "GRANT ALL ON marqueeflow_pos_db.* TO 'mf_pos_user'@'localhost';"
+            "$MYSQL" "${MYSQL_ARGS[@]}" -e "GRANT ALL ON marqueeflow_pos_db_staging.* TO 'mf_pos_user'@'localhost';"
+            "$MYSQL" "${MYSQL_ARGS[@]}" -e "FLUSH PRIVILEGES;"
 
             # Migrations (sorted — 000-init first)
             for db in marqueeflow_pos_db_staging marqueeflow_pos_db; do
               for f in $(ls /var/www/marqueeflow-pos-repo/backend/migrations/*.sql 2>/dev/null | sort); do
                 echo "Applying $f to $db"
-                "$MYSQL" -h "$DB_HOST" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"} "$db" < "$f" || true
+                "$MYSQL" "${MYSQL_ARGS[@]}" "$db" < "$f" || true
               done
             done
 
@@ -143,7 +185,7 @@ jobs:
                 env: {
                   NODE_ENV: '$([ "$ENV" = "staging" ] && echo staging || echo production)',
                   PORT: $PORT,
-                  DB_HOST: '127.0.0.1',
+                  DB_HOST: '$POS_DB_HOST',
                   DB_USER: 'mf_pos_user',
                   DB_PASSWORD: '$MF_POS_DB_PASS',
                   DB_NAME: '$DB',
