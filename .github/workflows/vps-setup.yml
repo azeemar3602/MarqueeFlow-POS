@@ -219,13 +219,17 @@ jobs:
             fi
             pm2 save
 
-            # Seed super admin on production DB if missing
-            COUNT=$("$MYSQL" "${MYSQL_ARGS[@]}" -N -e "SELECT COUNT(*) FROM marqueeflow_pos_db.super_admins" 2>/dev/null || echo 0)
+            # Seed / sync super admin (production DB)
+            BCRYPT_HASH='$2a$10$IcRoIvRJxSGoxKmhNnzSk.5jvr/rN2zeQv1idDkl0VRvmi1a8PINq'
+            COUNT=$("$MYSQL" "${MYSQL_ARGS[@]}" -N -e "SELECT COUNT(*) FROM marqueeflow_pos_db.super_admins WHERE email='support@marqueeflow.com'" 2>/dev/null || echo 0)
             if [ "${COUNT:-0}" = "0" ]; then
-              BCRYPT_HASH='$2a$10$KOT/lvoBmQFYW4WPItEkyueyb4VbES2l4gILyNFBKyMX.64roWbLK'
               "$MYSQL" "${MYSQL_ARGS[@]}" marqueeflow_pos_db -e \
                 "INSERT INTO super_admins (name,email,password) VALUES ('Super Admin','support@marqueeflow.com','${BCRYPT_HASH}');"
               echo "Seeded super admin support@marqueeflow.com"
+            else
+              "$MYSQL" "${MYSQL_ARGS[@]}" marqueeflow_pos_db -e \
+                "UPDATE super_admins SET password='${BCRYPT_HASH}' WHERE email='support@marqueeflow.com';"
+              echo "Synced super admin password for support@marqueeflow.com"
             fi
 
             # nginx (POS vhosts only — new files)

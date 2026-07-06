@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { useAdminTab } from '../lib/useAdminTab'
-const saApi = axios.create({ baseURL: '/api' })
+import { apiErrorMessage } from '../api'
+const saApi = axios.create({ baseURL: '/api', timeout: 20000 })
 
 export default function SuperAdminLogin() {
   const navigate = useNavigate()
@@ -19,7 +20,7 @@ export default function SuperAdminLogin() {
       localStorage.setItem('sa_token', data.token)
       localStorage.setItem('sa_admin', JSON.stringify(data.admin))
       navigate('/superadmin')
-    } catch (e) { setError(e.response?.data?.error || 'Login failed') }
+    } catch (e) { setError(e.response?.data?.error || apiErrorMessage(e) || 'Login failed') }
     setLoading(false)
   }
 
