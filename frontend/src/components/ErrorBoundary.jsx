@@ -19,7 +19,7 @@ export default class ErrorBoundary extends Component {
         <div className="min-h-screen flex items-center justify-center p-6 text-center bg-white">
           <div className="max-w-sm">
             <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center mx-auto mb-4">
-              <span className="text-white font-bold text-lg">R</span>
+              <span className="text-white font-bold text-lg">M</span>
             </div>
             <h1 className="text-xl font-bold text-gray-800">Something went wrong</h1>
             <p className="text-gray-500 mt-2 text-sm">Please reload the page. If it keeps happening, contact support.</p>

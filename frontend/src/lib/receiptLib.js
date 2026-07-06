@@ -159,7 +159,7 @@ export function buildReceiptHTML(sale, s) {
 
   // Header
   let header = `
-    <div class="center xl bold">${esc(s.shopName || 'RetailPOS')}</div>
+    <div class="center xl bold">${esc(s.shopName || 'MarqueeFlow POS')}</div>
     ${s.address ? `<div class="center sm dim">${esc(s.address)}</div>` : ''}
     ${s.phone   ? `<div class="center sm dim">Tel: ${esc(s.phone)}</div>` : ''}
   `

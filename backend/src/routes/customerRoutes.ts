@@ -53,7 +53,7 @@ r.post('/:id/payment', async (req, res) => {
     await conn.beginTransaction()
     const [rows]: any = await conn.query('SELECT credit_balance FROM customers WHERE id=? AND tenant_id=?', [req.params.id, tenantId])
     if (!rows.length) return res.status(404).json({ error: 'Not found' })
-    const newBalance = Math.max(0, Number(rows[0].credit_balance || 0) - amount)
+    const newBalance = Number(rows[0].credit_balance || 0) - amount
     await conn.query('UPDATE customers SET credit_balance=? WHERE id=?', [newBalance, req.params.id])
     await conn.query('INSERT INTO customer_ledger (tenant_id, customer_id, type, amount, balance_after, note) VALUES (?,?,?,?,?,?)',
       [tenantId, req.params.id, 'payment', -amount, newBalance, note || 'Payment received'])
@@ -74,7 +74,7 @@ r.post('/:id/adjust', async (req, res) => {
     await conn.beginTransaction()
     const [rows]: any = await conn.query('SELECT credit_balance FROM customers WHERE id=? AND tenant_id=? FOR UPDATE', [req.params.id, tenantId])
     if (!rows.length) { await conn.rollback(); return res.status(404).json({ error: 'Not found' }) }
-    const newBalance = Math.max(0, Number(rows[0].credit_balance || 0) + amt)
+    const newBalance = Number(rows[0].credit_balance || 0) + amt
     await conn.query('UPDATE customers SET credit_balance=? WHERE id=?', [newBalance, req.params.id])
     await conn.query('INSERT INTO customer_ledger (tenant_id, customer_id, type, amount, balance_after, note) VALUES (?,?,?,?,?,?)',
       [tenantId, req.params.id, 'adjustment', amt, newBalance, note || (amt > 0 ? 'Charge / adjustment' : 'Credit adjustment')])

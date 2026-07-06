@@ -16,6 +16,8 @@ import Team from './pages/Team'
 import Settings from './pages/Settings'
 import SuperAdmin from './pages/SuperAdmin'
 import Expenses from './pages/Expenses'
+import Payables from './pages/Payables'
+import PayablePublic from './pages/PayablePublic'
 import SuperAdminLogin from './pages/SuperAdminLogin'
 
 function Guard({ children, roles }) {
@@ -43,11 +45,13 @@ export default function App() {
       <Route path="/welcome" element={<Landing />} />
       <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
+      <Route path="/payable/:token" element={<PayablePublic />} />
       <Route path="/" element={<Guard><Layout /></Guard>}>
         <Route index element={<POS />} />
         <Route path="products" element={<PermGuard permKey="products"><Products /></PermGuard>} />
         <Route path="customers" element={<PermGuard permKey="customers"><Customers /></PermGuard>} />
         <Route path="credit" element={<PermGuard permKey="credit"><Credit /></PermGuard>} />
+        <Route path="payables" element={<PermGuard permKey="payables"><Payables /></PermGuard>} />
         <Route path="sales" element={<PermGuard permKey="sales"><Sales /></PermGuard>} />
         <Route path="reports" element={<PermGuard permKey="reports"><Reports /></PermGuard>} />
         <Route path="expenses" element={<PermGuard permKey="expenses"><Expenses /></PermGuard>} />

@@ -16,14 +16,16 @@ const ALL_PERMISSIONS = [
   { key: 'discount',     label: 'Apply Discounts',    hint: 'Give discounts at checkout' },
   { key: 'delete_sale',  label: 'Delete Sales',       hint: 'Void or delete a completed sale' },
   { key: 'credit',       label: 'Credit / Ledger',    hint: 'Manage customer credit accounts' },
+  { key: 'payables',     label: 'Payables / Vendors', hint: 'Manage supplier payables' },
+  { key: 'expenses',     label: 'Expenses',           hint: 'Record shop expenses' },
   { key: 'team',         label: 'Manage Team',        hint: 'Add, edit or remove users' },
   { key: 'settings',     label: 'Settings',           hint: 'Change shop & receipt settings' },
 ]
 
 const DEFAULT_PERMISSIONS = {
-  owner:   { sales:true, products:true, customers:true, reports:true, cost_price:true, discount:true, delete_sale:true, credit:true, team:true, settings:true },
-  manager: { sales:true, products:true, customers:true, reports:true, cost_price:true, discount:true, delete_sale:true, credit:true, team:false, settings:true },
-  cashier: { sales:true, products:false, customers:true, reports:false, cost_price:false, discount:false, delete_sale:false, credit:false, team:false, settings:false },
+  owner:   { sales:true, products:true, customers:true, reports:true, cost_price:true, discount:true, delete_sale:true, credit:true, payables:true, expenses:true, team:true, settings:true },
+  manager: { sales:true, products:true, customers:true, reports:true, cost_price:true, discount:true, delete_sale:true, credit:true, payables:true, expenses:true, team:false, settings:true },
+  cashier: { sales:true, products:false, customers:true, reports:false, cost_price:false, discount:false, delete_sale:false, credit:false, payables:false, expenses:false, team:false, settings:false },
 }
 
 function permsForRole(role, existing) {

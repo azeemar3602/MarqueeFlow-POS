@@ -90,7 +90,7 @@ function buildESCPOS(sale, settings) {
   push(CMD.init)
 
   push(CMD.alignCenter, CMD.dblSizeOn, CMD.boldOn)
-  push(textToBytes((s.shopName || 'RetailPOS') + '\n'))
+  push(textToBytes((s.shopName || 'MarqueeFlow POS') + '\n'))
   push(CMD.normalSize, CMD.boldOff)
   if (s.tagline) push(textToBytes(s.tagline + '\n'))
   if (s.address) push(textToBytes(s.address + '\n'))
@@ -330,7 +330,7 @@ async function renderReceiptCanvas(sale, settings) {
   function gap(px) { y += px }
 
   // ── Header ──
-  line(s.shopName || 'RetailPOS', { center: true, size: F.big, bold: true })
+  line(s.shopName || 'MarqueeFlow POS', { center: true, size: F.big, bold: true })
   if (s.tagline) line(s.tagline, { center: true, size: F.small })
   if (s.address) line(s.address, { center: true, size: F.small })
   if (s.phone)   line('Phone: ' + s.phone, { center: true, size: F.small })
@@ -498,7 +498,7 @@ async function buildPaymentReceipt(p, settings) {
     ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(PAD, y); ctx.lineTo(W - PAD, y); ctx.stroke(); ctx.restore()
     y += Math.round(F.base * 0.55)
   }
-  line(s.shopName || 'RetailPOS', { center: true, size: F.big, bold: true })
+  line(s.shopName || 'MarqueeFlow POS', { center: true, size: F.big, bold: true })
   if (s.address) line(s.address, { center: true, size: F.small })
   if (s.phone)   line('Phone: ' + s.phone, { center: true, size: F.small })
   divider()

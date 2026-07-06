@@ -82,6 +82,22 @@ r.get('/customer-ledger', async (req, res) => {
   res.json({ customers, totals })
 })
 
+r.get('/supplier-ledger', async (req, res) => {
+  const { tenantId } = (req as any).user
+  const { search } = req.query
+  let q = `SELECT id, name, phone, balance, created_at FROM suppliers WHERE tenant_id=?`
+  const params: any[] = [tenantId]
+  if (search) { q += ' AND (name LIKE ? OR phone LIKE ?)'; params.push(`%${search}%`, `%${search}%`) }
+  q += ' ORDER BY balance DESC, name'
+  const [suppliers]: any = await pool.query(q, params)
+  const [[totals]]: any = await pool.query(
+    `SELECT COALESCE(SUM(balance),0) totalOutstanding,
+            COUNT(*) totalSuppliers,
+            SUM(CASE WHEN balance > 0 THEN 1 ELSE 0 END) withBalance
+     FROM suppliers WHERE tenant_id=?`, [tenantId])
+  res.json({ suppliers, totals })
+})
+
 // ── Stock-wise ledger: per-product in/out summary, or one product's movements ──
 r.get('/stock-ledger', async (req, res) => {
   const { tenantId } = (req as any).user

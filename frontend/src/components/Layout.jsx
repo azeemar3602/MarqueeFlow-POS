@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { ShoppingCart, Package, Users, Receipt, BarChart2, LogOut, Menu, X, UserCheck, Settings as SettingsIcon, CreditCard, Wallet, Download, Smartphone } from 'lucide-react'
+import { ShoppingCart, Package, Users, Receipt, BarChart2, LogOut, Menu, X, UserCheck, Settings as SettingsIcon, CreditCard, Wallet, Download, Smartphone, Truck } from 'lucide-react'
 import { useState } from 'react'
 import { useSettings, useT } from '../context/SettingsContext'
 import { usePwaInstall } from '../lib/pwa'
@@ -88,6 +88,7 @@ export default function Layout() {
     { to: '/products',  labelKey: 'products',  icon: Package,    permKey: 'products' },
     { to: '/customers', labelKey: 'customers', icon: Users,      permKey: 'customers' },
     { to: '/credit',    labelKey: 'credit',    icon: CreditCard, permKey: 'credit' },
+    { to: '/payables',  labelKey: 'payables',  icon: Truck,      permKey: 'payables' },
     { to: '/sales',     labelKey: 'sales',     icon: Receipt,    permKey: 'sales' },
     { to: '/reports',   labelKey: 'reports',   icon: BarChart2,  permKey: 'reports' },
   { to: '/expenses',  labelKey: 'expenses',  icon: Wallet,     permKey: 'expenses' },
@@ -112,7 +113,7 @@ export default function Layout() {
           </button>
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-xs font-bold">R</span>
+              <span className="text-white text-xs font-bold">M</span>
             </div>
             <span className="font-bold text-indigo-600 text-lg">MarqueeFlow POS</span>
             <span className="text-gray-400 text-xs hidden sm:inline">{user?.tenantName}</span>

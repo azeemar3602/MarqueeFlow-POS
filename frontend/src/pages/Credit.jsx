@@ -106,7 +106,8 @@ export default function Credit() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-900 mb-4">Credit</h1>
+      <h1 className="text-xl font-bold text-gray-900 mb-1">Credit — To Receive</h1>
+      <p className="text-sm text-gray-500 mb-4">Money customers owe your shop (khata receivable)</p>
 
       {/* Hero total */}
       <div className="rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 text-white p-5 mb-4">

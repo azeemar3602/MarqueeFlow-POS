@@ -19,9 +19,9 @@ let _btChar   = null
 
 export default function Receipt({ sale, storeName, settings: settingsProp, onClose, onDelete }) {
   const ctx = (() => { try { return useSettings() } catch { return null } })()
-  const settings = settingsProp || ctx?.settings || { ...FALLBACK_SETTINGS, shopName: storeName || 'RetailPOS' }
+  const settings = settingsProp || ctx?.settings || { ...FALLBACK_SETTINGS, shopName: storeName || 'MarqueeFlow POS' }
   const s = { ...settings }
-  if (storeName && (!s.shopName || s.shopName === 'RetailPOS')) s.shopName = storeName
+  if (storeName && (!s.shopName || s.shopName === 'MarqueeFlow POS')) s.shopName = storeName
   const cur = s.currency || 'PKR'
 
   const [sharing, setSharing] = useState(false)
@@ -280,7 +280,7 @@ export default function Receipt({ sale, storeName, settings: settingsProp, onClo
 
         {/* Preview */}
         <div className="p-4 font-mono text-xs space-y-1 max-h-[52vh] overflow-y-auto">
-          <p className="text-center font-bold text-base">{s.shopName || 'RetailPOS'}</p>
+          <p className="text-center font-bold text-base">{s.shopName || 'MarqueeFlow POS'}</p>
           {s.address && <p className="text-center text-gray-500">{s.address}</p>}
           {s.phone && <p className="text-center text-gray-500">Tel: {s.phone}</p>}
           <div className="border-t border-dashed border-gray-300 my-2" />

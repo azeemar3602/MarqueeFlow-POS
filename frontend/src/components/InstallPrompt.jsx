@@ -38,7 +38,7 @@ export default function InstallPrompt() {
         {!iosHint ? (
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold">R</span>
+              <span className="text-white font-bold">M</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-900">Install MarqueeFlow POS</p>

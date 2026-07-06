@@ -33,7 +33,7 @@ r.get('/', async (req, res) => {
   if (rows.length) {
     try { data = typeof rows[0].data === 'string' ? JSON.parse(rows[0].data) : rows[0].data } catch { data = {} }
   }
-  const merged = { ...DEFAULT_SETTINGS, shopName: t[0]?.name || 'RetailPOS', ...data }
+  const merged = { ...DEFAULT_SETTINGS, shopName: t[0]?.name || 'MarqueeFlow POS', ...data }
   res.json(merged)
 })
 

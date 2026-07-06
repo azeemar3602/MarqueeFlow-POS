@@ -7,7 +7,7 @@ const Ctx = createContext(null)
 export const useSettings = () => useContext(Ctx)
 
 export const FALLBACK_SETTINGS = {
-  shopName: 'RetailPOS', phone: '', address: '',
+  shopName: 'MarqueeFlow POS', phone: '', address: '',
   footer: 'Thank you for your business!',
   printFormat: 'thermal', paperWidth: 80,
   showName: true, showQty: true, showRate: true, showTotal: true,
