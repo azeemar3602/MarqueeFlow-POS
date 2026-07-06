@@ -32,6 +32,11 @@ jobs:
             export ENV_TARGET="${{ github.event.inputs.environment }}"
 
             echo "=== MarqueeFlow POS setup (does NOT touch marqueeflow/alurate) ==="
+            export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            if ! command -v mysql >/dev/null 2>&1; then
+              apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq mysql-client
+            fi
+            MYSQL="$(command -v mysql)"
 
             # Directories (POS only)
             for d in \
@@ -71,20 +76,19 @@ jobs:
             fi
             source "$SECRETS_FILE"
 
-            # MySQL databases (POS only)
-            mysql -e "CREATE DATABASE IF NOT EXISTS marqueeflow_pos_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-            mysql -e "CREATE DATABASE IF NOT EXISTS marqueeflow_pos_db_staging CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-            mysql -e "CREATE USER IF NOT EXISTS 'mf_pos_user'@'localhost' IDENTIFIED BY '${MF_POS_DB_PASS}';" || true
-            mysql -e "ALTER USER 'mf_pos_user'@'localhost' IDENTIFIED BY '${MF_POS_DB_PASS}';"
-            mysql -e "GRANT ALL ON marqueeflow_pos_db.* TO 'mf_pos_user'@'localhost';"
-            mysql -e "GRANT ALL ON marqueeflow_pos_db_staging.* TO 'mf_pos_user'@'localhost';"
-            mysql -e "FLUSH PRIVILEGES;"
+            "$MYSQL" -e "CREATE DATABASE IF NOT EXISTS marqueeflow_pos_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+            "$MYSQL" -e "CREATE DATABASE IF NOT EXISTS marqueeflow_pos_db_staging CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+            "$MYSQL" -e "CREATE USER IF NOT EXISTS 'mf_pos_user'@'localhost' IDENTIFIED BY '${MF_POS_DB_PASS}';" || true
+            "$MYSQL" -e "ALTER USER 'mf_pos_user'@'localhost' IDENTIFIED BY '${MF_POS_DB_PASS}';"
+            "$MYSQL" -e "GRANT ALL ON marqueeflow_pos_db.* TO 'mf_pos_user'@'localhost';"
+            "$MYSQL" -e "GRANT ALL ON marqueeflow_pos_db_staging.* TO 'mf_pos_user'@'localhost';"
+            "$MYSQL" -e "FLUSH PRIVILEGES;"
 
-            # Migrations
+            # Migrations (sorted — 000-init first)
             for db in marqueeflow_pos_db_staging marqueeflow_pos_db; do
-              for f in /var/www/marqueeflow-pos-repo/backend/migrations/*.sql; do
-                [ -f "$f" ] || continue
-                mysql "$db" < "$f" 2>/dev/null || true
+              for f in $(ls /var/www/marqueeflow-pos-repo/backend/migrations/*.sql 2>/dev/null | sort); do
+                echo "Applying $f to $db"
+                "$MYSQL" "$db" < "$f" || true
               done
             done
 
