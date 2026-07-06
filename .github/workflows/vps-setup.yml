@@ -160,10 +160,15 @@ jobs:
               git checkout "$BRANCH"
               git reset --hard "origin/$BRANCH"
 
-              cd backend && npm ci && npm run build
+              cd backend
+              rm -rf node_modules
+              npm ci
+              npm run build
               rsync -a --delete dist/ "$BACKEND_DIR/dist/"
               cp package.json package-lock.json "$BACKEND_DIR/"
-              cd "$BACKEND_DIR" && npm ci --omit=dev
+              cd "$BACKEND_DIR"
+              rm -rf node_modules
+              npm ci --omit=dev
 
               cat > "$BACKEND_DIR/ecosystem.config.cjs" <<ECO
             module.exports = {
@@ -199,7 +204,9 @@ jobs:
               fi
 
               cd /var/www/marqueeflow-pos-repo/frontend
-              npm ci && npm run build
+              rm -rf node_modules
+              npm ci
+              npm run build
               rsync -a --delete dist/ "$FRONTEND_DIR/"
               echo "Deployed $ENV on port $PORT"
             }
