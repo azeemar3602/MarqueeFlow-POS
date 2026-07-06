@@ -16,6 +16,7 @@ export const FALLBACK_SETTINGS = {
   language: 'en',
   trackStock: true,
   onboardingComplete: false,
+  onboardingProgress: {},
   defaultPaymentMethod: 'cash',
   printMethod: 'rawbt',
 }

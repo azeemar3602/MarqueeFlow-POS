@@ -24,6 +24,7 @@ export const DEFAULT_SETTINGS = {
   language: 'en',
   trackStock: true,
   onboardingComplete: false,
+  onboardingProgress: {},
   defaultPaymentMethod: 'cash',
   printMethod: 'rawbt', // rawbt | bluetooth | browser
 }

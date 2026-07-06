@@ -89,7 +89,6 @@ export default function Layout() {
   const { user, logout, hasPermission } = useAuth()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
-  const [showWizard, setShowWizard] = useState(true)
   const t = useT()
   const { settings } = useSettings()
   const isRtl = settings?.language === 'ur'
@@ -127,8 +126,8 @@ export default function Layout() {
         )
         return null
       })()}
-      {user?.role === 'owner' && showWizard && !settings?.onboardingComplete && (
-        <SetupWizard onComplete={() => setShowWizard(false)} />
+      {['owner', 'manager'].includes(user?.role) && (
+        <SetupWizard />
       )}
       <HelpButton />
       <header className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
