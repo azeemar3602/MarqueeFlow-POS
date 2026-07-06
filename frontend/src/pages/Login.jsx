@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import api from '../api'
+import api, { apiErrorMessage } from '../api'
 import AuthShell from '../components/AuthShell'
 
 export default function Login() {
@@ -36,7 +36,7 @@ export default function Login() {
       } else if (err === 'blocked') {
         setError('blocked:' + (msg || 'Your account access has expired. Please contact the administrator.'))
       } else {
-        setError(msg || err || 'Login failed')
+        setError(msg || err || apiErrorMessage(e))
       }
     }
     setLoading(false)
@@ -89,6 +89,13 @@ export default function Login() {
         <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-base">
           {loading ? 'Signing in…' : 'Sign In →'}
         </button>
+        <p className="text-center text-xs text-slate-400 leading-relaxed">
+          Platform admin?{' '}
+          <Link to="/superadmin/login" className="text-teal-600 font-semibold hover:underline">
+            Super Admin login
+          </Link>
+          {' '}— not the same as store login.
+        </p>
       </form>
     </AuthShell>
   )
