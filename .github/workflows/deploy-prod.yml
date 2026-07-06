@@ -41,17 +41,28 @@ jobs:
 
             echo "--- Building backend ---"
             cd /var/www/marqueeflow-pos-repo/backend
+            rm -rf node_modules
             npm ci
             npm run build
             rsync -a --delete /var/www/marqueeflow-pos-repo/backend/dist/ /var/www/marqueeflow-pos-backend/dist/
             cp /var/www/marqueeflow-pos-repo/backend/package.json /var/www/marqueeflow-pos-backend/package.json
             cp /var/www/marqueeflow-pos-repo/backend/package-lock.json /var/www/marqueeflow-pos-backend/package-lock.json
             cd /var/www/marqueeflow-pos-backend
+            rm -rf node_modules
             npm ci --omit=dev
             pm2 reload marqueeflow-pos-backend
 
+            echo "--- DB migrations (POS databases only) ---"
+            MYSQL="$(command -v mysql)"
+            source /root/.marqueeflow-pos-secrets 2>/dev/null || true
+            for f in $(ls /var/www/marqueeflow-pos-repo/backend/migrations/*.sql 2>/dev/null | sort); do
+              echo "Applying $f to marqueeflow_pos_db"
+              "$MYSQL" -u mf_pos_user ${MF_POS_DB_PASS:+-p"$MF_POS_DB_PASS"} marqueeflow_pos_db < "$f" || true
+            done
+
             echo "--- Building frontend ---"
             cd /var/www/marqueeflow-pos-repo/frontend
+            rm -rf node_modules
             npm ci
             npm run build
             rsync -a --delete /var/www/marqueeflow-pos-repo/frontend/dist/ /var/www/marqueeflow-pos/dist/
