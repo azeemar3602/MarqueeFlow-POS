@@ -8,7 +8,7 @@ import api from '../api'
 import { useSettings } from '../context/SettingsContext'
 import { usePwaInstall, isStandalone } from '../lib/pwa'
 import {
-  ONBOARDING_STEPS, countDone, allRequiredDone, emptyProgress,
+  ONBOARDING_STEPS, countDone, emptyProgress,
 } from '../lib/onboardingSteps'
 
 function instructionLine(item, standalone) {
@@ -59,7 +59,8 @@ export default function SetupWizard({ onComplete }) {
   const markStep = useCallback(async (id, done = true) => {
     const next = { ...emptyProgress(), ...(settings?.onboardingProgress || {}), [id]: done }
     try {
-      await persistProgress(next, allRequiredDone(next))
+      // Never auto-finish onboarding from markStep — only explicit Finish/Skip
+      await persistProgress(next, false)
     } catch { /* non-blocking */ }
   }, [settings?.onboardingProgress, persistProgress])
 
@@ -119,19 +120,22 @@ export default function SetupWizard({ onComplete }) {
   }
 
   function nextStep() {
-    if (stepIndex >= total - 1) { finish(); return }
-    const next = stepIndex + 1
-    setStepIndex(next)
-    const s = ONBOARDING_STEPS[next]
-    if (s?.path) navigate(s.path)
+    setStepIndex(i => {
+      const next = Math.min(total - 1, i + 1)
+      const s = ONBOARDING_STEPS[next]
+      if (s?.path) navigate(s.path)
+      return next
+    })
   }
 
   function prevStep() {
-    if (stepIndex <= 0) return
-    const prev = stepIndex - 1
-    setStepIndex(prev)
-    const s = ONBOARDING_STEPS[prev]
-    if (s?.path) navigate(s.path)
+    setStepIndex(i => {
+      if (i <= 0) return 0
+      const prev = i - 1
+      const s = ONBOARDING_STEPS[prev]
+      if (s?.path) navigate(s.path)
+      return prev
+    })
   }
 
   function goToStep(i) {
@@ -160,10 +164,16 @@ export default function SetupWizard({ onComplete }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] pointer-events-none flex items-end sm:items-stretch justify-end p-0 sm:p-4">
-      <div className="absolute inset-0 bg-black/40 pointer-events-auto sm:hidden" onClick={() => setExpanded(false)} />
+    <div className="fixed inset-0 z-[100]">
+      {/* Backdrop — behind panel, z-0 */}
+      <div
+        className="absolute inset-0 bg-black/40 sm:hidden z-0"
+        onClick={() => setExpanded(false)}
+        aria-hidden
+      />
 
-      <div className="pointer-events-auto w-full sm:w-[420px] sm:max-h-[calc(100vh-2rem)] flex flex-col bg-white sm:rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[92vh] sm:my-auto">
+      {/* Panel — explicit z-10 so taps always hit buttons, not backdrop */}
+      <div className="absolute inset-x-0 bottom-0 sm:inset-auto sm:top-4 sm:right-4 sm:bottom-4 sm:left-auto z-10 w-full sm:w-[420px] sm:max-h-[calc(100vh-2rem)] flex flex-col bg-white sm:rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[88vh]">
         <div className="bg-gradient-to-br from-teal-600 to-cyan-700 px-4 py-3 text-white flex-shrink-0">
           <div className="flex items-start justify-between gap-2">
             <div>
@@ -289,10 +299,15 @@ export default function SetupWizard({ onComplete }) {
               <ArrowLeft size={14} /> Back
             </button>
             <button type="button" onClick={nextStep}
-              className="btn-primary flex-1 text-sm py-3 flex items-center justify-center gap-1">
-              {stepIndex < total - 1 ? <>Next <ArrowRight size={14} /></> : 'Finish setup'}
+              className="btn-primary flex-1 text-sm py-3.5 flex items-center justify-center gap-1 touch-manipulation">
+              {stepIndex < total - 1 ? <>Next step <ArrowRight size={14} /></> : 'Finish setup'}
             </button>
           </div>
+          {stepIndex < total - 1 && (
+            <button type="button" onClick={() => markStep(step.id, true)} className="w-full text-xs text-teal-600 font-medium py-1">
+              Mark step {stepIndex + 1} done & continue →
+            </button>
+          )}
           <button type="button" onClick={finish} className="w-full text-xs text-slate-400 hover:text-slate-600 py-1">
             Skip guide for now
           </button>
