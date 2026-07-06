@@ -18,9 +18,9 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
       manifest: {
-        name: 'RetailPOS',
-        short_name: 'RetailPOS',
-        description: 'Point of Sale for General & Grocery Stores',
+        name: 'MarqueeFlow POS',
+        short_name: 'MF POS',
+        description: 'Point of Sale for Pakistani Retail Shops',
         theme_color: '#4f46e5',
         background_color: '#f8fafc',
         display: 'standalone',

@@ -17,7 +17,7 @@ export function useAdminTab() {
 
     link.setAttribute('type', 'image/svg+xml')
     link.setAttribute('href', '/favicon-admin.svg')
-    document.title = 'Super Admin — RetailPOS'
+    document.title = 'Super Admin — MarqueeFlow POS'
 
     return () => {
       document.title = prevTitle

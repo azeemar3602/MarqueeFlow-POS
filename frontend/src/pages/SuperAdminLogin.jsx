@@ -33,7 +33,7 @@ export default function SuperAdminLogin() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-white">Super Admin</h1>
-          <p className="text-gray-400 text-sm mt-1">RetailPOS Administration</p>
+          <p className="text-gray-400 text-sm mt-1">MarqueeFlow POS Administration</p>
         </div>
         <form onSubmit={submit} className="bg-gray-800 rounded-2xl p-6 space-y-4">
           {error && <p className="bg-red-900/40 border border-red-700 text-red-400 text-sm rounded-xl px-3 py-2">{error}</p>}

@@ -114,7 +114,7 @@ export default function Layout() {
             <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
               <span className="text-white text-xs font-bold">R</span>
             </div>
-            <span className="font-bold text-indigo-600 text-lg">RetailPOS</span>
+            <span className="font-bold text-indigo-600 text-lg">MarqueeFlow POS</span>
             <span className="text-gray-400 text-xs hidden sm:inline">{user?.tenantName}</span>
           </div>
         </div>
@@ -143,7 +143,7 @@ export default function Layout() {
           <div className="fixed inset-0 z-40 md:hidden">
             <div className="absolute inset-0 bg-black/30" onClick={() => setOpen(false)} />
             <nav className="absolute left-0 top-0 bottom-0 w-64 bg-white p-4 flex flex-col gap-1 shadow-xl">
-              <p className="font-bold text-indigo-600 text-lg mb-3 px-2">RetailPOS</p>
+              <p className="font-bold text-indigo-600 text-lg mb-3 px-2">MarqueeFlow POS</p>
               {links.map(({ to, labelKey, icon: Icon }) => (
                 <NavLink key={to} to={to} end={to === '/'} onClick={() => setOpen(false)}
                   className={({ isActive }) => mobileNavClass(isActive)}>

@@ -1,12 +1,11 @@
-name: Deploy to Staging
+name: Deploy POS to Staging
 
 on:
   push:
     branches: [staging]
 
-# Block concurrent deploys to staging
 concurrency:
-  group: deploy-staging
+  group: marqueeflow-pos-deploy-staging
   cancel-in-progress: true
 
 jobs:
@@ -15,7 +14,7 @@ jobs:
     uses: ./.github/workflows/test.yml
 
   deploy:
-    name: Deploy Staging
+    name: Deploy MarqueeFlow POS Staging
     needs: test
     runs-on: ubuntu-latest
     environment: staging
@@ -23,40 +22,38 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy to staging server via SSH
+      - name: Deploy POS staging via SSH (isolated paths only)
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.STAGING_HOST }}
-          username: ${{ secrets.STAGING_USER }}
-          key: ${{ secrets.STAGING_SSH_KEY }}
+          host: ${{ secrets.VPS_SSH_HOST }}
+          username: ${{ secrets.VPS_SSH_USER }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
           timeout: 60s
           command_timeout: 20m
           script: |
             set -e
-            echo "=== Deploying to staging ==="
+            echo "=== MarqueeFlow POS staging deploy (does not touch MarqueeFlow/AluRate) ==="
 
-            # Pull latest monorepo code (single source of truth)
-            cd /root/retailpos-repo
+            cd /var/www/marqueeflow-pos-repo
             git fetch origin
             git reset --hard origin/staging
 
-            # --- Backend: build in monorepo, sync dist into the serving dir ---
             echo "--- Building backend ---"
-            cd /root/retailpos-repo/backend
+            cd /var/www/marqueeflow-pos-repo/backend
             npm ci
             npm run build
-            rsync -a --delete /root/retailpos-repo/backend/dist/ /root/retailpos-backend-staging/dist/
-            cp /root/retailpos-repo/backend/package.json /root/retailpos-backend-staging/package.json
-            cp /root/retailpos-repo/backend/package-lock.json /root/retailpos-backend-staging/package-lock.json
-            cd /root/retailpos-backend-staging
+            rsync -a --delete /var/www/marqueeflow-pos-repo/backend/dist/ /var/www/marqueeflow-pos-backend-staging/dist/
+            cp /var/www/marqueeflow-pos-repo/backend/package.json /var/www/marqueeflow-pos-backend-staging/package.json
+            cp /var/www/marqueeflow-pos-repo/backend/package-lock.json /var/www/marqueeflow-pos-backend-staging/package-lock.json
+            cd /var/www/marqueeflow-pos-backend-staging
             npm ci --omit=dev
-            pm2 reload retailpos-backend-staging --update-env
+            pm2 reload marqueeflow-pos-backend-staging
 
-            # --- Frontend: build in monorepo, sync dist into nginx root ---
             echo "--- Building frontend ---"
-            cd /root/retailpos-repo/frontend
+            cd /var/www/marqueeflow-pos-repo/frontend
             npm ci
             npm run build
-            rsync -a --delete /root/retailpos-repo/frontend/dist/ /root/retailpos-staging/dist/
+            rsync -a --delete /var/www/marqueeflow-pos-repo/frontend/dist/ /var/www/marqueeflow-pos-staging/dist/
 
-            echo "=== Staging deploy complete ==="
+            echo "=== POS staging deploy complete ==="

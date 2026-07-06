@@ -199,7 +199,7 @@ export default function SuperAdmin() {
             </svg>
           </div>
           <div>
-            <p className="font-bold text-gray-900">RetailPOS Admin</p>
+            <p className="font-bold text-gray-900">MarqueeFlow POS Admin</p>
             <p className="text-xs text-gray-400">{admin?.name || 'Super Admin'}</p>
           </div>
         </div>

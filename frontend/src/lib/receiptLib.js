@@ -209,6 +209,6 @@ export function buildReceiptHTML(sale, s) {
     ${totalsHTML(sale, s, thermal)}
     ${div2}
     <div class="footer">${esc(s.footer || 'Thank you for your business!')}</div>
-    <div class="powered">Powered by RetailPOS</div>
+    <div class="powered">Powered by MarqueeFlow POS</div>
   </body></html>`
 }

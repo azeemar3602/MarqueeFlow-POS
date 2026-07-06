@@ -107,7 +107,7 @@ function PosDemo() {
         <span className="w-3 h-3 rounded-full bg-red-400" />
         <span className="w-3 h-3 rounded-full bg-amber-400" />
         <span className="w-3 h-3 rounded-full bg-emerald-400" />
-        <span className="ml-3 text-xs text-gray-400">pos.axiondigital.cloud</span>
+        <span className="ml-3 text-xs text-gray-400">pos.marqueeflow.com</span>
         <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping-slow" /> LIVE DEMO
         </span>
@@ -149,7 +149,7 @@ function PosDemo() {
       {/* Printing receipt */}
       <div className={'receipt-slot ' + (printing ? 'receipt-open' : '')}>
         <div className="receipt-paper">
-          <p className="text-center font-extrabold text-[13px]">Axion Mart</p>
+          <p className="text-center font-extrabold text-[13px]">Demo Mart</p>
           <p className="text-center text-[9px] text-gray-500 mb-1">Railway Road, Sillanwali</p>
           <div className="border-t border-dashed border-gray-300 my-1" />
           {DEMO_ITEMS.map(it => (
@@ -229,11 +229,11 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-5 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
-              <span className="text-white font-bold">R</span>
+              <span className="text-white font-bold">M</span>
             </div>
             <div className="leading-tight">
-              <p className="font-bold text-indigo-700">RetailPOS</p>
-              <p className="text-[10px] text-gray-400 -mt-0.5">by Axion Digital</p>
+              <p className="font-bold text-indigo-700">MarqueeFlow POS</p>
+              <p className="text-[10px] text-gray-400 -mt-0.5">by MarqueeFlow</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -343,7 +343,7 @@ export default function Landing() {
       {/* Why */}
       <section className="max-w-6xl mx-auto px-5 py-16 grid lg:grid-cols-2 gap-10 items-center">
         <Reveal>
-          <h2 className="text-2xl sm:text-3xl font-bold">Why shops choose RetailPOS</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold">Why shops choose MarqueeFlow POS</h2>
           <ul className="mt-5 space-y-3">
             {[
               'No installation — works in any browser, even on mobile',
@@ -384,7 +384,7 @@ export default function Landing() {
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold mb-3">
               <Star size={13} className="fill-amber-400 text-amber-400" /> Loved by 1,200+ shops
             </span>
-            <h2 className="text-2xl sm:text-3xl font-bold">Shopkeepers across Pakistan trust RetailPOS</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold">Shopkeepers across Pakistan trust MarqueeFlow POS</h2>
             <p className="text-gray-500 mt-2" dir="rtl" style={{ fontFamily: "'Noto Naskh Arabic', serif" }}>پاکستان بھر کے دکاندار ریٹیل پی او ایس پر بھروسہ کرتے ہیں</p>
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
@@ -560,11 +560,11 @@ export default function Landing() {
           <div className="lg:col-span-1">
             <div className="flex items-center gap-2.5">
               <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-lg">R</span>
+                <span className="text-white font-bold text-lg">M</span>
               </div>
               <div className="leading-tight">
-                <p className="font-extrabold text-white text-lg">RetailPOS</p>
-                <p className="text-[11px] text-gray-500 -mt-0.5">by Axion Digital</p>
+                <p className="font-extrabold text-white text-lg">MarqueeFlow POS</p>
+                <p className="text-[11px] text-gray-500 -mt-0.5">by MarqueeFlow</p>
               </div>
             </div>
             <p className="text-sm text-gray-400 mt-4 leading-relaxed">
@@ -586,9 +586,9 @@ export default function Landing() {
             <h4 className="text-white font-bold uppercase tracking-wider text-xs mb-4">Get in touch</h4>
             <ul className="space-y-3 text-sm">
               <li>
-                <a href="mailto:supportataxiondigital@gmail.com" className="group flex items-start gap-3 hover:text-white transition-colors">
+                <a href="mailto:support@marqueeflow.com" className="group flex items-start gap-3 hover:text-white transition-colors">
                   <span className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-500/20 group-hover:border-indigo-400/40 transition-colors"><Mail size={16} className="text-indigo-400" /></span>
-                  <span><span className="block text-[11px] text-gray-500">Email us</span>supportataxiondigital@gmail.com</span>
+                  <span><span className="block text-[11px] text-gray-500">Email us</span>support@marqueeflow.com</span>
                 </a>
               </li>
               <li>
@@ -634,9 +634,9 @@ export default function Landing() {
         {/* Bottom bar */}
         <div className="relative border-t border-white/10">
           <div className="max-w-6xl mx-auto px-5 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
-            <p>© {new Date().getFullYear()} <span className="text-gray-300 font-semibold">Axion Digital</span> · RetailPOS. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} <span className="text-gray-300 font-semibold">MarqueeFlow</span> · MarqueeFlow POS. All rights reserved.</p>
             <div className="flex items-center gap-4">
-              <a href="mailto:supportataxiondigital@gmail.com" className="hover:text-white transition-colors">Support</a>
+              <a href="mailto:support@marqueeflow.com" className="hover:text-white transition-colors">Support</a>
               <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
               <span className="text-gray-700">·</span>
               <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping-slow" /> Online</span>

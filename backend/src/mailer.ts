@@ -1,9 +1,12 @@
 import nodemailer from 'nodemailer'
 
-const ADMIN_EMAIL = 'supportataxiondigital@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'support@marqueeflow.com'
+const APP_URL = (process.env.APP_URL || 'https://pos.marqueeflow.com').replace(/\/$/, '')
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.MAIL_HOST || 'smtp.hostinger.com',
+  port: Number(process.env.MAIL_PORT || 465),
+  secure: process.env.MAIL_PORT !== '587',
   auth: {
     user: process.env.MAIL_USER,
     pass: process.env.MAIL_PASS,
@@ -15,7 +18,7 @@ const ENV_PREFIX = process.env.NODE_ENV !== 'production' ? '[STAGING] ' : ''
 function send(subject: string, html: string) {
   if (!process.env.MAIL_USER || !process.env.MAIL_PASS) return
   transporter.sendMail({
-    from: `"RetailPOS Admin" <${process.env.MAIL_USER}>`,
+    from: `"MarqueeFlow POS" <${process.env.MAIL_USER || ADMIN_EMAIL}>`,
     to: ADMIN_EMAIL,
     subject: ENV_PREFIX + subject,
     html,
@@ -36,7 +39,7 @@ function card(title: string, color: string, rows: string, extra = '') {
       <table style="width:100%;border-collapse:collapse;padding:8px">${rows}</table>
       ${extra}
       <div style="padding:12px 20px;background:#f3f4f6;text-align:right">
-        <a href="https://pos.axiondigital.cloud/superadmin" style="background:#4f46e5;color:#fff;padding:8px 18px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">Open Super Admin →</a>
+        <a href="${APP_URL}/superadmin" style="background:#4f46e5;color:#fff;padding:8px 18px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">Open Super Admin →</a>
       </div>
     </div>
   </div>`

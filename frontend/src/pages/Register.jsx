@@ -20,7 +20,7 @@ function PendingPage({ storeName }) {
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-white mb-2">Request Received!</h1>
             <p className="text-indigo-200 text-sm leading-relaxed">
-              Thank you for registering <span className="text-white font-semibold">{storeName}</span> on RetailPOS.
+              Thank you for registering <span className="text-white font-semibold">{storeName}</span> on MarqueeFlow POS.
               Your request has been received and forwarded to our admin team.
               We will review your details and provide you access shortly.
             </p>
@@ -33,7 +33,7 @@ function PendingPage({ storeName }) {
           <div className="mb-7" dir="rtl">
             <h2 className="text-xl font-bold text-white mb-2" style={{ fontFamily: 'Georgia, serif' }}>درخواست موصول ہو گئی!</h2>
             <p className="text-indigo-200 text-sm leading-loose" style={{ fontFamily: 'Georgia, serif' }}>
-              <span className="text-white font-semibold">{storeName}</span> کو RetailPOS پر رجسٹر کرنے کا شکریہ۔
+              <span className="text-white font-semibold">{storeName}</span> کو MarqueeFlow POS پر رجسٹر کرنے کا شکریہ۔
               آپ کی درخواست موصول ہو گئی ہے اور ہمارے ایڈمن کو بھیج دی گئی ہے۔
               ہم جلد ہی آپ کی تفصیلات جانچ کر آپ کو رسائی فراہم کریں گے۔
             </p>

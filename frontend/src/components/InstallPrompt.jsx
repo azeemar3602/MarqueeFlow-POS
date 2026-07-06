@@ -41,7 +41,7 @@ export default function InstallPrompt() {
               <span className="text-white font-bold">R</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900">Install RetailPOS</p>
+              <p className="text-sm font-semibold text-gray-900">Install MarqueeFlow POS</p>
               <p className="text-xs text-gray-400">One-tap launch, full screen, works offline</p>
             </div>
             <button onClick={install} className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-3 py-2 rounded-xl flex-shrink-0">

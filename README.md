@@ -1,6 +1,9 @@
-# RetailPOS
+# MarqueeFlow POS
 
-A multi-tenant point-of-sale system with React frontend, Node/Express/TypeScript backend, and a comprehensive automated test suite.
+Multi-tenant point-of-sale for Pakistani retail shops — React frontend, Node/Express/TypeScript backend, PWA with offline sync.
+
+**Production:** https://pos.marqueeflow.com  
+**Deploy guide:** [deploy/DEPLOY.md](deploy/DEPLOY.md) (isolated from MarqueeFlow booking + AluRate on the same VPS)
 
 ## Repository structure
 
