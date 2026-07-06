@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 
 const FEATURES = [
-  { icon: ShoppingCart, title: 'Fast Billing', desc: 'Ring up sales in seconds with search, categories and one-tap cart.', g: 'from-indigo-500 to-blue-500' },
+  { icon: ShoppingCart, title: 'Fast Billing', desc: 'Ring up sales in seconds with search, categories and one-tap cart.', g: 'from-teal-500 to-blue-500' },
   { icon: ScanLine, title: 'Barcode Scanning', desc: 'Scan with your phone camera or a USB scanner — instant product lookup.', g: 'from-fuchsia-500 to-pink-500' },
   { icon: CreditCard, title: 'Credit / Khata', desc: 'Track customer balances, credit limits, payments and statements.', g: 'from-rose-500 to-orange-500' },
   { icon: Printer, title: 'Thermal & A4 Receipts', desc: 'Print on 58/80mm thermal or A4/A5 — even Urdu receipts print perfectly.', g: 'from-emerald-500 to-teal-500' },
@@ -120,9 +120,9 @@ function PosDemo() {
             return (
               <div key={it.n}
                 className={'rounded-xl border p-2.5 text-left transition-all duration-300 ' +
-                  (inCart ? 'border-indigo-300 bg-indigo-50 scale-95' : 'border-gray-100 bg-white')}>
+                  (inCart ? 'border-teal-300 bg-teal-50 scale-95' : 'border-gray-100 bg-white')}>
                 <p className="text-[11px] font-semibold text-gray-800 truncate">{it.n}</p>
-                <p className="text-indigo-600 font-bold text-xs mt-0.5">PKR {it.p}</p>
+                <p className="text-teal-600 font-bold text-xs mt-0.5">PKR {it.p}</p>
               </div>
             )
           })}
@@ -130,8 +130,8 @@ function PosDemo() {
         {/* Cart */}
         <div className="col-span-2 rounded-xl bg-gray-50 border border-gray-100 p-3 flex flex-col">
           <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700 mb-2">
-            <ShoppingCart size={13} className="text-indigo-600" /> Cart
-            <span className="ml-auto text-[10px] font-bold text-white bg-indigo-600 rounded-full px-1.5">{cart.length}</span>
+            <ShoppingCart size={13} className="text-teal-600" /> Cart
+            <span className="ml-auto text-[10px] font-bold text-white bg-teal-600 rounded-full px-1.5">{cart.length}</span>
           </div>
           <div className="space-y-1 flex-1 min-h-[96px]">
             {cart.map((it, idx) => (
@@ -142,7 +142,7 @@ function PosDemo() {
           </div>
           <div className="border-t border-dashed border-gray-300 mt-2 pt-2 flex justify-between items-baseline">
             <span className="text-xs font-bold text-gray-700">Total</span>
-            <span className="text-base font-extrabold text-indigo-700">PKR {total.toLocaleString()}</span>
+            <span className="text-base font-extrabold text-teal-700">PKR {total.toLocaleString()}</span>
           </div>
         </div>
       </div>
@@ -190,7 +190,7 @@ export default function Landing() {
         @keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
         .floaty { animation: floaty 5s ease-in-out infinite; }
         @keyframes gradShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
-        .grad-text { background:linear-gradient(90deg,#4f46e5,#9333ea,#db2777,#4f46e5); background-size:300% auto; -webkit-background-clip:text; background-clip:text; color:transparent; animation: gradShift 6s ease infinite; }
+        .grad-text { background:linear-gradient(90deg,#0d9488,#0891b2,#f59e0b,#0d9488); background-size:300% auto; -webkit-background-clip:text; background-clip:text; color:transparent; animation: gradShift 6s ease infinite; }
 
         .reveal { opacity:0; transform:translateY(30px); transition:opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); }
         .reveal-in { opacity:1; transform:none; }
@@ -228,18 +228,18 @@ export default function Landing() {
       <header className={'sticky top-[40px] z-50 nav-glass ' + (scrolled ? 'nav-solid' : '')}>
         <div className="max-w-6xl mx-auto px-5 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
+            <div className="w-9 h-9 bg-gradient-to-br from-teal-600 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
               <span className="text-white font-bold">M</span>
             </div>
             <div className="leading-tight">
-              <p className="font-bold text-indigo-700">MarqueeFlow POS</p>
+              <p className="font-bold text-teal-700">MarqueeFlow POS</p>
               <p className="text-[10px] text-gray-400 -mt-0.5">by MarqueeFlow</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <a href="#pricing" className="hidden sm:inline px-4 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-indigo-700 transition-colors">Pricing</a>
-            <Link to="/login" className="px-4 py-2 rounded-xl text-sm font-semibold text-indigo-700 hover:bg-indigo-50 transition-colors">Company Login</Link>
-            <Link to="/register" className="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-sm">Get Started</Link>
+            <a href="#pricing" className="hidden sm:inline px-4 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-teal-700 transition-colors">Pricing</a>
+            <Link to="/login" className="px-4 py-2 rounded-xl text-sm font-semibold text-teal-700 hover:bg-teal-50 transition-colors">Company Login</Link>
+            <Link to="/register" className="px-4 py-2 rounded-xl text-sm font-semibold bg-teal-600 text-white hover:bg-teal-700 transition-colors shadow-sm">Get Started</Link>
           </div>
         </div>
       </header>
@@ -254,7 +254,7 @@ export default function Landing() {
         </div>
 
         <div className="relative max-w-6xl mx-auto px-5 pt-12 pb-16 text-center">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/70 backdrop-blur border border-indigo-100 text-indigo-700 text-xs font-semibold mb-3 shadow-sm">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/70 backdrop-blur border border-teal-100 text-teal-700 text-xs font-semibold mb-3 shadow-sm">
             <Sparkles size={13} /> Point of Sale · Inventory · Credit · Reports
           </span>
           <div className="mb-5">
@@ -272,16 +272,16 @@ export default function Landing() {
             credit management, inventory and live reports. Works on phone, tablet and desktop.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-            <Link to="/register" className="group inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 hover:-translate-y-0.5">
+            <Link to="/register" className="group inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-teal-600 text-white font-semibold hover:bg-teal-700 transition-all shadow-lg shadow-teal-600/25 hover:shadow-teal-600/40 hover:-translate-y-0.5">
               Register Your Company <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
             </Link>
-            <Link to="/login" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-gray-200 font-semibold text-gray-700 hover:border-indigo-300 hover:bg-white transition-colors">
+            <Link to="/login" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-gray-200 font-semibold text-gray-700 hover:border-teal-300 hover:bg-white transition-colors">
               Company Login
             </Link>
           </div>
           <p className="mt-4 text-xs text-gray-400 flex items-center justify-center gap-3 flex-wrap">
             <span className="inline-flex items-center gap-1"><ShieldCheck size={13} className="text-emerald-500" /> No card required</span>
-            <span className="inline-flex items-center gap-1"><Smartphone size={13} className="text-indigo-500" /> Works on any device</span>
+            <span className="inline-flex items-center gap-1"><Smartphone size={13} className="text-teal-500" /> Works on any device</span>
             <span className="inline-flex items-center gap-1"><Zap size={13} className="text-amber-500" /> Set up in minutes</span>
           </p>
 
@@ -296,7 +296,7 @@ export default function Landing() {
               { v: <span className="inline-flex items-center gap-1"><Counter to={4.9} decimals={1} /><Star size={18} className="fill-amber-400 text-amber-400" /></span>, l: 'Avg. rating', icon: Star },
             ].map((s, i) => (
               <Reveal key={s.l} delay={i * 90} className="rounded-2xl bg-white/70 backdrop-blur border border-gray-100 p-4 shadow-sm">
-                <p className="text-2xl sm:text-3xl font-extrabold text-indigo-700">{s.v}</p>
+                <p className="text-2xl sm:text-3xl font-extrabold text-teal-700">{s.v}</p>
                 <p className="text-xs text-gray-500 mt-0.5">{s.l}</p>
               </Reveal>
             ))}
@@ -363,14 +363,14 @@ export default function Landing() {
           </ul>
         </Reveal>
         <Reveal delay={120}>
-          <div className="floaty rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-700 p-8 text-white text-center shadow-xl shadow-indigo-600/20">
+          <div className="floaty rounded-3xl bg-gradient-to-br from-teal-600 to-purple-700 p-8 text-white text-center shadow-xl shadow-teal-600/20">
             <Camera size={28} className="mx-auto mb-3 opacity-80" />
             <h3 className="text-2xl font-bold">Start selling in minutes</h3>
-            <p className="text-indigo-100 mt-2">Create your company account and add your first product right away.</p>
-            <Link to="/register" className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white text-indigo-700 font-semibold hover:bg-indigo-50 transition-colors">
+            <p className="text-teal-100 mt-2">Create your company account and add your first product right away.</p>
+            <Link to="/register" className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white text-teal-700 font-semibold hover:bg-teal-50 transition-colors">
               Register New Company <ArrowRight size={18} />
             </Link>
-            <p className="text-indigo-200 text-xs mt-3">
+            <p className="text-teal-200 text-xs mt-3">
               Existing company? <Link to="/login" className="underline font-medium">Company Login</Link>
             </p>
           </div>
@@ -402,7 +402,7 @@ export default function Landing() {
                       “{t.quote}”
                     </p>
                     <div className={'mt-4 flex items-center gap-3 ' + (ur ? 'flex-row-reverse text-right' : '')}>
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
                            style={ur ? { fontFamily: "'Noto Naskh Arabic', serif" } : undefined}>{t.initials}</div>
                       <div className={ur ? 'text-right' : ''}>
                         <p className="font-semibold text-gray-900 text-sm" style={ur ? { fontFamily: "'Noto Naskh Arabic', serif" } : undefined}>{t.name}</p>
@@ -427,7 +427,7 @@ export default function Landing() {
                 ⚡ FLASH SALE · 50% OFF ALL PLANS · LIMITED TIME ⚡
               </span>
             </div>
-            <span className="inline-block px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold mb-3">Simple, flexible pricing</span>
+            <span className="inline-block px-3 py-1 rounded-full bg-teal-50 text-teal-700 text-xs font-semibold mb-3">Simple, flexible pricing</span>
             <h2 className="text-2xl sm:text-3xl font-bold">Pick a plan that fits your shop</h2>
             <p className="text-gray-500 mt-2">Pay once with a small yearly fee, or go month-to-month — whichever suits your shop.</p>
           </div>
@@ -438,7 +438,7 @@ export default function Landing() {
               {BILLING.map(b => (
                 <button key={b.id} onClick={() => setBilling(b.id)}
                   className={'relative px-4 sm:px-5 py-2 rounded-xl text-sm font-semibold transition-colors ' +
-                    (billing === b.id ? 'bg-indigo-600 text-white shadow' : 'text-gray-600 hover:text-gray-900')}>
+                    (billing === b.id ? 'bg-teal-600 text-white shadow' : 'text-gray-600 hover:text-gray-900')}>
                   {b.label}
                   {b.note && (
                     <span className={'ml-1.5 hidden sm:inline text-[10px] font-bold px-1.5 py-0.5 rounded-full ' +
@@ -456,8 +456,8 @@ export default function Landing() {
               <Reveal key={t.id} delay={(i % 5) * 70}>
                 <div
                   className={'relative flex flex-col h-full rounded-2xl border p-5 bg-white transition-all hover:shadow-xl hover:-translate-y-1 ' +
-                    (t.popular ? 'border-indigo-300 ring-2 ring-indigo-200 shadow-sm' : t.free ? 'border-emerald-200' : 'border-gray-100')}>
-                  {t.popular && <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold">MOST POPULAR</span>}
+                    (t.popular ? 'border-teal-300 ring-2 ring-teal-200 shadow-sm' : t.free ? 'border-emerald-200' : 'border-gray-100')}>
+                  {t.popular && <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-teal-600 text-white text-[10px] font-bold">MOST POPULAR</span>}
                   {t.free && <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-bold">FREE</span>}
                   <h3 className="font-bold text-gray-900">{t.name}</h3>
                   <p className="text-xs text-gray-400 mt-0.5 min-h-[32px]">{t.tagline}</p>
@@ -469,7 +469,7 @@ export default function Landing() {
                         <span className="promo-blink inline-block mb-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-extrabold">50% OFF</span>
                         <div className="flex items-baseline gap-2 flex-wrap">
                           <p className="text-base font-semibold text-gray-400 line-through">{money(t.monthly * 2)}</p>
-                          <p className="text-2xl font-extrabold text-indigo-700 whitespace-nowrap">{money(t.monthly)}<span className="text-sm font-medium text-gray-400">/month</span></p>
+                          <p className="text-2xl font-extrabold text-teal-700 whitespace-nowrap">{money(t.monthly)}<span className="text-sm font-medium text-gray-400">/month</span></p>
                         </div>
                         <p className="text-xs text-gray-400">billed monthly · cancel anytime</p>
                       </>
@@ -484,19 +484,19 @@ export default function Landing() {
                           <span className="text-lg font-extrabold text-emerald-600 leading-tight">{money(t.oneTime)}</span>
                         </div>
                         {/* Yearly recurring below */}
-                        <p className="text-2xl font-extrabold text-indigo-700 whitespace-nowrap">{money(t.yearly)}<span className="text-sm font-medium text-gray-400">/year</span></p>
+                        <p className="text-2xl font-extrabold text-teal-700 whitespace-nowrap">{money(t.yearly)}<span className="text-sm font-medium text-gray-400">/year</span></p>
                         <p className="text-[11px] text-gray-500 mt-0.5">(yearly fee starts after the 1st year)</p>
                       </>
                     )}
                   </div>
-                  <div className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-700">
+                  <div className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-teal-700">
                     <Users size={15} /> {t.users} {t.users === 1 ? 'user' : 'users'}
                   </div>
                   <p className="text-xs text-gray-500 mt-2">{t.blurb}</p>
                   <ul className="mt-3 space-y-1.5 flex-1">
                     {t.features.map(f => (
                       <li key={f} className="flex items-start gap-2 text-xs text-gray-600">
-                        <Check size={13} className={'flex-shrink-0 mt-0.5 ' + (t.free ? 'text-emerald-500' : 'text-indigo-500')} />
+                        <Check size={13} className={'flex-shrink-0 mt-0.5 ' + (t.free ? 'text-emerald-500' : 'text-teal-500')} />
                         <span>{f}</span>
                       </li>
                     ))}
@@ -504,27 +504,27 @@ export default function Landing() {
                   <Link to={'/register?plan=' + t.id + (t.free ? '' : '&billing=' + billing)}
                     className={'mt-4 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ' +
                       (t.free ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-                        : t.popular ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                        : 'border-2 border-gray-200 text-gray-700 hover:border-indigo-300')}>
+                        : t.popular ? 'bg-teal-600 text-white hover:bg-teal-700'
+                        : 'border-2 border-gray-200 text-gray-700 hover:border-teal-300')}>
                     {t.free ? 'Start Free Trial' : 'Choose ' + t.name} <ArrowRight size={15} />
                   </Link>
                 </div>
               </Reveal>
             ))}
           </div>
-          <p className="text-center text-xs text-gray-400 mt-6">On yearly plans you pay only the one-time setup cost to start — the yearly fee begins after the first year and covers hosting, support &amp; updates. Monthly has no setup cost. Need more than 10 users? <Link to="/register" className="text-indigo-600 font-medium">Contact us</Link> for a custom plan. Prices in PKR, exclusive of any hardware.</p>
+          <p className="text-center text-xs text-gray-400 mt-6">On yearly plans you pay only the one-time setup cost to start — the yearly fee begins after the first year and covers hosting, support &amp; updates. Monthly has no setup cost. Need more than 10 users? <Link to="/register" className="text-teal-600 font-medium">Contact us</Link> for a custom plan. Prices in PKR, exclusive of any hardware.</p>
         </div>
       </section>
 
       {/* Final CTA */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-teal-600 via-teal-700 to-purple-700 text-white">
         <div className="blob absolute -top-10 right-10 w-72 h-72 rounded-full opacity-40" style={{ background: 'radial-gradient(circle,#a5b4fc,transparent 60%)' }} />
         <div className="relative max-w-4xl mx-auto px-5 py-16 text-center">
           <Reveal>
             <h2 className="text-3xl sm:text-4xl font-extrabold">Ready to modernise your shop?</h2>
-            <p className="mt-3 text-indigo-100 max-w-xl mx-auto">Join hundreds of shopkeepers billing faster, tracking credit and printing receipts — in any language.</p>
+            <p className="mt-3 text-teal-100 max-w-xl mx-auto">Join hundreds of shopkeepers billing faster, tracking credit and printing receipts — in any language.</p>
             <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center">
-              <Link to="/register" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl bg-white text-indigo-700 font-bold hover:bg-indigo-50 transition-colors shadow-lg">
+              <Link to="/register" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl bg-white text-teal-700 font-bold hover:bg-teal-50 transition-colors shadow-lg">
                 Get Started — 50% OFF <ArrowRight size={18} />
               </Link>
               <Link to="/login" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl border-2 border-white/40 font-semibold hover:bg-white/10 transition-colors">
@@ -559,7 +559,7 @@ export default function Landing() {
           {/* Brand */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-lg">M</span>
               </div>
               <div className="leading-tight">
@@ -575,7 +575,7 @@ export default function Landing() {
               <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2.5 py-1">
                 <ShieldCheck size={12} /> Secure
               </span>
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-2.5 py-1">
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-teal-300 bg-teal-500/10 border border-teal-500/20 rounded-full px-2.5 py-1">
                 <Zap size={12} /> 99.9% Uptime
               </span>
             </div>
@@ -587,7 +587,7 @@ export default function Landing() {
             <ul className="space-y-3 text-sm">
               <li>
                 <a href="mailto:support@marqueeflow.com" className="group flex items-start gap-3 hover:text-white transition-colors">
-                  <span className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-500/20 group-hover:border-indigo-400/40 transition-colors"><Mail size={16} className="text-indigo-400" /></span>
+                  <span className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 group-hover:bg-teal-500/20 group-hover:border-teal-400/40 transition-colors"><Mail size={16} className="text-teal-400" /></span>
                   <span><span className="block text-[11px] text-gray-500">Email us</span>support@marqueeflow.com</span>
                 </a>
               </li>

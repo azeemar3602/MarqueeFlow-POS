@@ -37,19 +37,19 @@ export default function SetupWizard({ onComplete }) {
   return (
     <div className="fixed inset-0 z-[100] bg-black/50 flex items-end sm:items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-        <div className="bg-gradient-to-br from-indigo-600 to-violet-600 px-5 py-4 text-white relative">
+        <div className="bg-gradient-to-br from-teal-600 to-cyan-700 px-5 py-4 text-white relative">
           <button onClick={finish} className="absolute top-3 right-3 p-1 rounded-lg hover:bg-white/20 text-white/80"><X size={18} /></button>
           <div className="flex items-center gap-2 mb-1"><Sparkles size={18} /> <span className="text-sm font-semibold opacity-90">Welcome to MarqueeFlow POS</span></div>
           <h2 className="text-xl font-bold">Let&apos;s set up your shop</h2>
-          <p className="text-indigo-100 text-sm mt-1">3 quick steps — about 5 minutes</p>
+          <p className="text-teal-100 text-sm mt-1">3 quick steps — about 5 minutes</p>
         </div>
         <div className="p-5 space-y-3">
           {STEPS.map((s, i) => (
             <button key={s.id} type="button" onClick={() => { setStep(i); navigate(s.path) }}
               className={'w-full flex items-start gap-3 p-3 rounded-xl border text-left transition-colors ' +
-                (step === i ? 'border-indigo-300 bg-indigo-50' : 'border-gray-100 hover:bg-gray-50')}>
+                (step === i ? 'border-teal-300 bg-teal-50' : 'border-gray-100 hover:bg-gray-50')}>
               {step > i ? <CheckCircle size={20} className="text-emerald-500 flex-shrink-0 mt-0.5" /> :
-                step === i ? <Circle size={20} className="text-indigo-600 flex-shrink-0 mt-0.5" fill="currentColor" /> :
+                step === i ? <Circle size={20} className="text-teal-600 flex-shrink-0 mt-0.5" fill="currentColor" /> :
                 <Circle size={20} className="text-gray-300 flex-shrink-0 mt-0.5" />}
               <div>
                 <p className="font-semibold text-sm text-gray-900">{i + 1}. {s.label}</p>
@@ -58,7 +58,7 @@ export default function SetupWizard({ onComplete }) {
             </button>
           ))}
           <button type="button" onClick={loadSamples} disabled={loadingSamples}
-            className="w-full py-2.5 rounded-xl border border-dashed border-indigo-200 text-indigo-600 text-sm font-semibold hover:bg-indigo-50">
+            className="w-full py-2.5 rounded-lg border border-dashed border-teal-200 text-teal-600 text-sm font-semibold hover:bg-teal-50">
             {loadingSamples ? 'Adding…' : '+ Load sample products (demo)'}
           </button>
           <div className="flex gap-2 pt-2">

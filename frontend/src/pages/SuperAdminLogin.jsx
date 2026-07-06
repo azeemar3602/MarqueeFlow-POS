@@ -27,7 +27,7 @@ export default function SuperAdminLogin() {
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+          <div className="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
@@ -39,16 +39,16 @@ export default function SuperAdminLogin() {
           {error && <p className="bg-red-900/40 border border-red-700 text-red-400 text-sm rounded-xl px-3 py-2">{error}</p>}
           <div>
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Email</label>
-            <input type="email" className="mt-1 w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 text-white text-sm placeholder-gray-500 focus:border-indigo-500 outline-none"
+            <input type="email" className="mt-1 w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 text-white text-sm placeholder-gray-500 focus:border-teal-500 outline-none"
               placeholder="admin@example.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Password</label>
-            <input type="password" className="mt-1 w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 text-white text-sm placeholder-gray-500 focus:border-indigo-500 outline-none"
+            <input type="password" className="mt-1 w-full bg-gray-700 border border-gray-600 rounded-xl px-3 py-2.5 text-white text-sm placeholder-gray-500 focus:border-teal-500 outline-none"
               placeholder="••••••••" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required />
           </div>
           <button type="submit" disabled={loading}
-            className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition-colors disabled:opacity-50">
+            className="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm transition-colors disabled:opacity-50">
             {loading ? 'Signing in…' : 'Sign In'}
           </button>
         </form>

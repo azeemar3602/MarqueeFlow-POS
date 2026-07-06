@@ -37,14 +37,14 @@ export default function InstallPrompt() {
       <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-3">
         {!iosHint ? (
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center flex-shrink-0">
               <span className="text-white font-bold">M</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-900">Install MarqueeFlow POS</p>
               <p className="text-xs text-gray-400">One-tap launch, full screen, works offline</p>
             </div>
-            <button onClick={install} className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-3 py-2 rounded-xl flex-shrink-0">
+            <button onClick={install} className="flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold px-3 py-2 rounded-xl flex-shrink-0">
               <Download size={15} /> Install
             </button>
             <button onClick={dismiss} className="text-gray-300 hover:text-gray-500 flex-shrink-0"><X size={16} /></button>
@@ -54,7 +54,7 @@ export default function InstallPrompt() {
             <div className="flex-1">
               <p className="text-sm font-semibold text-gray-900 mb-1">Add to Home Screen</p>
               <p className="text-xs text-gray-500 flex items-center gap-1 flex-wrap">
-                Tap <Share size={13} className="inline text-indigo-600" /> <b>Share</b> in Safari, then choose <b>“Add to Home Screen”</b>.
+                Tap <Share size={13} className="inline text-teal-600" /> <b>Share</b> in Safari, then choose <b>“Add to Home Screen”</b>.
               </p>
             </div>
             <button onClick={dismiss} className="text-gray-300 hover:text-gray-500"><X size={16} /></button>

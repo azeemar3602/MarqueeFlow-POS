@@ -15,7 +15,7 @@ export default function HelpButton() {
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} title="Help"
-        className="fixed bottom-20 md:bottom-6 right-4 z-40 w-12 h-12 rounded-full bg-indigo-600 text-white shadow-lg flex items-center justify-center hover:bg-indigo-700">
+        className="fixed bottom-20 md:bottom-6 right-4 z-40 w-12 h-12 rounded-full bg-teal-600 text-white shadow-lg shadow-teal-600/30 flex items-center justify-center hover:bg-teal-500">
         <HelpCircle size={22} />
       </button>
       {open && (
@@ -28,7 +28,7 @@ export default function HelpButton() {
             <div className="p-4 space-y-3">
               {TOPICS.map(t => (
                 <div key={t.title} className="flex gap-3 p-3 rounded-xl bg-gray-50">
-                  <t.icon size={18} className="text-indigo-600 flex-shrink-0 mt-0.5" />
+                  <t.icon size={18} className="text-teal-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-semibold text-sm text-gray-900">{t.title}</p>
                     <p className="text-xs text-gray-500 mt-1 leading-relaxed">{t.body}</p>

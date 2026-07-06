@@ -22,7 +22,7 @@ import SuperAdminLogin from './pages/SuperAdminLogin'
 
 function Guard({ children, roles }) {
   const { user, loading } = useAuth()
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin" /></div>
   if (!user) return <Navigate to="/login" replace />
   if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />
   return children
@@ -30,7 +30,7 @@ function Guard({ children, roles }) {
 
 function PermGuard({ children, permKey }) {
   const { user, loading, hasPermission } = useAuth()
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin" /></div>
   if (!user) return <Navigate to="/login" replace />
   if (!hasPermission(permKey)) return <Navigate to="/" replace />
   return children

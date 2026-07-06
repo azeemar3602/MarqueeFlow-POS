@@ -7,8 +7,9 @@ import { usePwaInstall } from '../lib/pwa'
 import OfflineBanner from './OfflineBanner'
 import SetupWizard from './SetupWizard'
 import HelpButton from './HelpButton'
+import BrandMark from './BrandMark'
 
-function MenuFooter({ user }) {
+function MenuFooter({ user, dark = true }) {
   const { installed, isIos, promptInstall } = usePwaInstall()
   const [hint, setHint] = useState(false)
   const expiry = user?.accessExpiresAt ? new Date(user.accessExpiresAt) : null
@@ -21,39 +22,45 @@ function MenuFooter({ user }) {
     if (r === 'unavailable') setHint(true)
   }
 
+  const box = dark ? 'border-slate-700/80' : 'border-gray-100'
+  const planBox = dark ? 'bg-slate-800/80' : 'bg-gray-50'
+  const muted = dark ? 'text-slate-500' : 'text-gray-400'
+  const accent = dark ? 'text-teal-300' : 'text-teal-700'
+  const val = dark ? 'text-slate-300' : 'text-gray-600'
+
   return (
-    <div className="mt-auto pt-3 border-t border-gray-100 space-y-2">
+    <div className={'mt-auto pt-3 border-t space-y-2 ' + box}>
       {user?.plan && (
-        <div className="px-3 py-2 rounded-xl bg-gray-50 text-xs">
+        <div className={'px-3 py-2 rounded-lg text-xs ' + planBox}>
           <div className="flex items-center justify-between">
-            <span className="text-gray-400">Package</span>
-            <span className="font-semibold text-indigo-700 capitalize">{user.plan}</span>
+            <span className={muted}>Package</span>
+            <span className={'font-semibold capitalize ' + accent}>{user.plan}</span>
           </div>
           {user.userLimit != null && (
             <div className="flex items-center justify-between mt-1">
-              <span className="text-gray-400">Seats</span>
-              <span className="font-medium text-gray-600">{user.userLimit}</span>
+              <span className={muted}>Seats</span>
+              <span className={'font-medium ' + val}>{user.userLimit}</span>
             </div>
           )}
           {expStr && (
             <div className="flex items-center justify-between mt-1">
-              <span className="text-gray-400">Next payment</span>
-              <span className={'font-medium ' + (daysLeft != null && daysLeft <= 3 ? 'text-red-600' : 'text-gray-600')}>{expStr}</span>
+              <span className={muted}>Renewal</span>
+              <span className={'font-medium ' + (daysLeft != null && daysLeft <= 3 ? 'text-red-500' : val)}>{expStr}</span>
             </div>
           )}
         </div>
       )}
       {installed ? (
-        <div className="w-full flex items-center justify-center gap-2 text-emerald-600 text-xs font-semibold px-3 py-2 rounded-xl bg-emerald-50">
+        <div className="w-full flex items-center justify-center gap-2 text-emerald-400 text-xs font-semibold px-3 py-2 rounded-lg bg-emerald-950/50">
           <Smartphone size={15} /> App installed
         </div>
       ) : (
-        <button onClick={onDownload} className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-3 py-2.5 rounded-xl">
+        <button onClick={onDownload} className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-500 text-white text-sm font-semibold px-3 py-2.5 rounded-lg transition-colors">
           <Download size={16} /> Download App
         </button>
       )}
       {hint && (
-        <p className="text-xs text-gray-500 px-1 leading-relaxed">
+        <p className={'text-xs px-1 leading-relaxed ' + (dark ? 'text-slate-500' : 'text-gray-500')}>
           {isIos
             ? <>Tap <b>Share</b> in Safari, then <b>“Add to Home Screen”</b>.</>
             : <>Open your browser menu (⋮) and choose <b>Install app</b> / <b>Add to Home screen</b>.</>}
@@ -64,18 +71,18 @@ function MenuFooter({ user }) {
 }
 
 function navClass(isActive) {
-  return 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ' +
-    (isActive ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900')
+  return 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ' +
+    (isActive ? 'bg-teal-600/20 text-teal-300 border-l-2 border-teal-400 pl-[10px]' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200 border-l-2 border-transparent pl-[10px]')
 }
 
 function mobileNavClass(isActive) {
-  return 'flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ' +
-    (isActive ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50')
+  return 'flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ' +
+    (isActive ? 'bg-teal-50 text-teal-700' : 'text-gray-600 hover:bg-gray-50')
 }
 
 function bottomNavClass(isActive) {
   return 'flex-1 flex flex-col items-center py-2 text-xs font-medium transition-colors ' +
-    (isActive ? 'text-indigo-600' : 'text-gray-400')
+    (isActive ? 'text-teal-600' : 'text-gray-400')
 }
 
 export default function Layout() {
@@ -95,7 +102,7 @@ export default function Layout() {
     { to: '/payables',  labelKey: 'payables',  icon: Truck,      permKey: 'payables' },
     { to: '/sales',     labelKey: 'sales',     icon: Receipt,    permKey: 'sales' },
     { to: '/reports',   labelKey: 'reports',   icon: BarChart2,  permKey: 'reports' },
-  { to: '/expenses',  labelKey: 'expenses',  icon: Wallet,     permKey: 'expenses' },
+    { to: '/expenses',  labelKey: 'expenses',  icon: Wallet,     permKey: 'expenses' },
     { to: '/team',      labelKey: 'team',      icon: UserCheck,  roles: ['owner', 'manager'] },
     { to: '/settings',  labelKey: 'settings',  icon: SettingsIcon, roles: ['owner', 'manager'] },
   ]
@@ -109,7 +116,7 @@ export default function Layout() {
   })
 
   return (
-    <div className="min-h-screen flex flex-col" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen flex flex-col bg-slate-100" dir={isRtl ? 'rtl' : 'ltr'}>
       <OfflineBanner />
       {user?.accessExpiresAt && (() => {
         const d = Math.ceil((new Date(user.accessExpiresAt) - new Date()) / 86400000)
@@ -124,32 +131,37 @@ export default function Layout() {
         <SetupWizard onComplete={() => setShowWizard(false)} />
       )}
       <HelpButton />
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+      <header className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
         <div className="flex items-center gap-3">
-          <button className="md:hidden p-1.5 rounded-lg hover:bg-gray-100" onClick={() => setOpen(o => !o)}>
+          <button className="md:hidden p-1.5 rounded-lg hover:bg-slate-100" onClick={() => setOpen(o => !o)}>
             {open ? <X size={20} /> : <Menu size={20} />}
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-xs font-bold">M</span>
-            </div>
-            <span className="font-bold text-indigo-600 text-lg">MarqueeFlow POS</span>
-            <span className="text-gray-400 text-xs hidden sm:inline">{user?.tenantName}</span>
+          <div className="flex items-center gap-2 md:hidden">
+            <BrandMark size="sm" className="!rotate-0" />
+            <span className="font-bold text-slate-800 text-base">MarqueeFlow</span>
           </div>
+          <span className="text-slate-400 text-sm hidden md:inline font-medium">{user?.tenantName}</span>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-            <p className="text-xs text-gray-400 capitalize">{user?.role}</p>
+            <p className="text-sm font-semibold text-slate-800">{user?.name}</p>
+            <p className="text-xs text-slate-400 capitalize">{user?.role}</p>
           </div>
-          <button onClick={doLogout} className="p-2 rounded-xl hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
+          <button onClick={doLogout} className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors">
             <LogOut size={18} />
           </button>
         </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <nav className="hidden md:flex flex-col w-56 bg-white border-r border-gray-200 p-3 gap-1">
+        <nav className="hidden md:flex flex-col w-60 bg-slate-900 p-4 gap-0.5">
+          <div className="flex items-center gap-2.5 px-2 mb-5 pb-4 border-b border-slate-700/80">
+            <BrandMark size="sm" className="!rotate-0 shadow-none" />
+            <div>
+              <p className="font-bold text-white text-sm leading-tight">MarqueeFlow</p>
+              <p className="text-teal-400/70 text-[10px] font-medium uppercase tracking-wider">POS</p>
+            </div>
+          </div>
           {links.map(({ to, labelKey, icon: Icon }) => (
             <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => navClass(isActive)}>
               <Icon size={18} /> {t(labelKey)}
@@ -160,16 +172,21 @@ export default function Layout() {
 
         {open && (
           <div className="fixed inset-0 z-40 md:hidden">
-            <div className="absolute inset-0 bg-black/30" onClick={() => setOpen(false)} />
+            <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
             <nav className="absolute left-0 top-0 bottom-0 w-64 bg-white p-4 flex flex-col gap-1 shadow-xl">
-              <p className="font-bold text-indigo-600 text-lg mb-3 px-2">MarqueeFlow POS</p>
+              <div className="flex items-center gap-2 mb-4 px-2">
+                <BrandMark size="sm" className="!rotate-0" />
+                <span className="font-bold text-slate-800">MarqueeFlow POS</span>
+              </div>
               {links.map(({ to, labelKey, icon: Icon }) => (
                 <NavLink key={to} to={to} end={to === '/'} onClick={() => setOpen(false)}
                   className={({ isActive }) => mobileNavClass(isActive)}>
                   <Icon size={18} /> {t(labelKey)}
                 </NavLink>
               ))}
-              <MenuFooter user={user} />
+              <div className="mt-auto pt-3 border-t">
+                <MenuFooter user={user} dark={false} />
+              </div>
             </nav>
           </div>
         )}
@@ -179,7 +196,7 @@ export default function Layout() {
         </main>
       </div>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-30">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
         {links.slice(0, 5).map(({ to, labelKey, icon: Icon }) => (
           <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => bottomNavClass(isActive)}>
             <Icon size={20} className="mb-0.5" />

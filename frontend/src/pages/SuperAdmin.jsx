@@ -199,7 +199,7 @@ export default function SuperAdmin() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-5 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center">
+          <div className="w-9 h-9 bg-teal-600 rounded-xl flex items-center justify-center">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
@@ -225,7 +225,7 @@ export default function SuperAdmin() {
           {[['dashboard', 'Dashboard'], ['companies', 'Companies'], ['plans', 'Plans']].map(([v, label]) => (
             <button key={v} onClick={() => setView(v)}
               className={'flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ' +
-                (view === v ? 'bg-indigo-600 text-white shadow' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50')}>
+                (view === v ? 'bg-teal-600 text-white shadow' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50')}>
               {label}
               {v === 'companies' && pendingCount > 0 && <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 align-middle">{pendingCount}</span>}
               {v === 'plans' && planPending > 0 && <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 align-middle">{planPending}</span>}
@@ -263,7 +263,7 @@ export default function SuperAdmin() {
                           <span className="font-medium">{t.name}</span>
                           <div className="flex items-center gap-2">
                             <span className="text-orange-600 text-xs">{daysLeft(t.access_expires_at)}d left</span>
-                            <button onClick={() => setExtendModal(t)} className="text-xs font-bold px-2 py-1 rounded-lg bg-indigo-600 text-white">Extend</button>
+                            <button onClick={() => setExtendModal(t)} className="text-xs font-bold px-2 py-1 rounded-lg bg-teal-600 text-white">Extend</button>
                           </div>
                         </div>
                       ))}
@@ -285,7 +285,7 @@ export default function SuperAdmin() {
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
                   {[
-                    { label: 'Active companies', val: overview.totals.active_tenants, fg: 'text-indigo-600' },
+                    { label: 'Active companies', val: overview.totals.active_tenants, fg: 'text-teal-600' },
                     { label: 'Active users', val: overview.totals.active_users, fg: 'text-violet-600' },
                     { label: 'Staff hours', val: (() => { const sec = overview.totals.active_seconds; const h = Math.floor(sec / 3600), m = Math.round((sec % 3600) / 60); return h ? `${h}h ${m}m` : `${m}m` })(), fg: 'text-emerald-600' },
                     { label: 'Invoices', val: Number(overview.totals.invoices).toLocaleString(), fg: 'text-blue-600' },
@@ -307,7 +307,7 @@ export default function SuperAdmin() {
                   { label: 'Active', count: counts.active, color: 'text-green-600', bg: 'bg-green-50 border-green-100' },
                   { label: 'Inactive', count: counts.inactive, color: 'text-gray-400', bg: 'bg-gray-50 border-gray-100' },
                   { label: 'Pending', count: counts.pending, color: 'text-amber-500', bg: 'bg-amber-50 border-amber-100' },
-                  { label: 'Approved', count: counts.approved, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-100' },
+                  { label: 'Approved', count: counts.approved, color: 'text-teal-600', bg: 'bg-teal-50 border-teal-100' },
                   { label: 'Rejected', count: counts.rejected, color: 'text-red-500', bg: 'bg-red-50 border-red-100' },
                 ].map(s => (
                   <div key={s.label} className={'rounded-2xl p-4 text-center border ' + s.bg}>
@@ -326,7 +326,7 @@ export default function SuperAdmin() {
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search company, owner, email or slug…"
-                className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-indigo-400" />
+                className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-teal-400" />
               {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><XCircle size={15} /></button>}
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -334,7 +334,7 @@ export default function SuperAdmin() {
                 <span className="text-[11px] text-gray-400 font-semibold mr-1">Status</span>
                 {['all', 'pending', 'approved', 'rejected'].map(v => (
                   <button key={v} onClick={() => setStatusFilter(v)}
-                    className={'px-2.5 py-1 rounded-lg text-xs font-semibold capitalize transition-colors ' + (statusFilter === v ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')}>{v}</button>
+                    className={'px-2.5 py-1 rounded-lg text-xs font-semibold capitalize transition-colors ' + (statusFilter === v ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')}>{v}</button>
                 ))}
               </div>
               <div className="flex items-center gap-1">
@@ -371,9 +371,9 @@ export default function SuperAdmin() {
                     <p className="text-xs text-gray-400">{r.current_user_limit} user{r.current_user_limit > 1 ? 's' : ''}</p>
                   </div>
                   <div className="text-gray-300 text-lg">→</div>
-                  <div className="flex-1 bg-indigo-50 rounded-xl p-3 text-center">
+                  <div className="flex-1 bg-teal-50 rounded-xl p-3 text-center">
                     <p className="text-xs text-gray-400 mb-0.5">Requested</p>
-                    <p className="font-bold text-indigo-700 capitalize">{r.requested_plan}</p>
+                    <p className="font-bold text-teal-700 capitalize">{r.requested_plan}</p>
                     <p className="text-xs text-gray-400">{r.requested_user_limit} user{r.requested_user_limit > 1 ? 's' : ''}</p>
                   </div>
                 </div>
@@ -398,8 +398,8 @@ export default function SuperAdmin() {
             {companyList.map(t => (
               <div key={t.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
                 <div className="flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setExpanded(expanded === t.id ? null : t.id)}>
-                  <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Building2 size={18} className="text-indigo-600" />
+                  <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Building2 size={18} className="text-teal-600" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">

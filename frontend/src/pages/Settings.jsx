@@ -10,7 +10,7 @@ function Toggle({ label, hint, value, onChange }) {
         <p className="text-sm font-medium text-gray-800">{label}</p>
         {hint && <p className="text-xs text-gray-400">{hint}</p>}
       </div>
-      <span dir="ltr" className={'relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ' + (value ? 'bg-indigo-600' : 'bg-gray-300')}>
+      <span dir="ltr" className={'relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ' + (value ? 'bg-teal-600' : 'bg-gray-300')}>
         <span className={'absolute top-0.5 left-0 w-5 h-5 bg-white rounded-full shadow transition-transform ' + (value ? 'translate-x-5' : 'translate-x-0.5')} />
       </span>
     </button>
@@ -89,7 +89,7 @@ export default function Settings() {
           {[{ v: 'en', label: 'English' }, { v: 'ur', label: 'اردو (Urdu)' }].map(o => (
             <button key={o.v} type="button" onClick={() => set('language', o.v)}
               className={'py-3 rounded-xl text-sm font-semibold border-2 transition-all ' +
-                (form.language === o.v ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500 hover:border-indigo-200')}>
+                (form.language === o.v ? 'border-teal-600 bg-teal-50 text-teal-700' : 'border-gray-200 text-gray-500 hover:border-teal-200')}>
               {o.label}
             </button>
           ))}
@@ -106,7 +106,7 @@ export default function Settings() {
             {[{ v: 'thermal', t: 'Thermal' }, { v: 'a5', t: 'A5' }, { v: 'a4', t: 'A4' }].map(o => (
               <button key={o.v} type="button" onClick={() => set('printFormat', o.v)}
                 className={'py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ' +
-                  (form.printFormat === o.v ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500')}>
+                  (form.printFormat === o.v ? 'border-teal-600 bg-teal-50 text-teal-700' : 'border-gray-200 text-gray-500')}>
                 {o.t}
               </button>
             ))}
@@ -119,7 +119,7 @@ export default function Settings() {
               {[58, 80].map(w => (
                 <button key={w} type="button" onClick={() => set('paperWidth', w)}
                   className={'py-2 rounded-xl text-sm font-semibold border-2 transition-all ' +
-                    (Number(form.paperWidth) === w ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500')}>
+                    (Number(form.paperWidth) === w ? 'border-teal-600 bg-teal-50 text-teal-700' : 'border-gray-200 text-gray-500')}>
                   {w}mm
                 </button>
               ))}
@@ -159,7 +159,7 @@ export default function Settings() {
             {['cash', 'credit', 'card'].map(v => (
               <button key={v} type="button" onClick={() => set('defaultPaymentMethod', v)}
                 className={'py-2 rounded-xl text-sm font-semibold border-2 capitalize ' +
-                  (form.defaultPaymentMethod === v ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500')}>{v}</button>
+                  (form.defaultPaymentMethod === v ? 'border-teal-600 bg-teal-50 text-teal-700' : 'border-gray-200 text-gray-500')}>{v}</button>
             ))}
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function Settings() {
               {[{ v: 'rawbt', t: 'RawBT (Android)' }, { v: 'bluetooth', t: 'Bluetooth' }, { v: 'browser', t: 'Browser' }].map(o => (
                 <button key={o.v} type="button" onClick={() => set('printMethod', o.v)}
                   className={'py-2 rounded-xl text-xs font-semibold border-2 ' +
-                    (form.printMethod === o.v ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500')}>{o.t}</button>
+                    (form.printMethod === o.v ? 'border-teal-600 bg-teal-50 text-teal-700' : 'border-gray-200 text-gray-500')}>{o.t}</button>
               ))}
             </div>
             <p className="text-xs text-gray-400 mt-2">Urdu text on thermal prints as a bitmap image (slower but correct). English uses fast text mode.</p>
