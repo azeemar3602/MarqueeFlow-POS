@@ -1,0 +1,19 @@
+name: External URL Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Curl POS from GitHub runner
+        run: |
+          echo "=== DNS ==="
+          dig +short pos.marqueeflow.com
+          echo "=== HTTPS pos ==="
+          curl -sI --connect-timeout 15 https://pos.marqueeflow.com | head -10 || echo "HTTPS failed"
+          echo "=== HTTP pos ==="
+          curl -sI --connect-timeout 15 http://pos.marqueeflow.com | head -10 || echo "HTTP failed"
+          echo "=== marqueeflow.com ==="
+          curl -sI --connect-timeout 15 https://marqueeflow.com | head -5 || echo "main site failed"
