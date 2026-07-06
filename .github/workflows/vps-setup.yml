@@ -25,7 +25,7 @@ jobs:
           username: ${{ secrets.VPS_SSH_USER }}
           key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
           port: ${{ secrets.VPS_SSH_PORT || 22 }}
-          timeout: 120s
+          timeout: 60s
           command_timeout: 30m
           script: |
             set -euo pipefail
@@ -33,15 +33,12 @@ jobs:
 
             echo "=== MarqueeFlow POS setup (does NOT touch marqueeflow/alurate) ==="
             export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            # MariaDB/MySQL for POS — install if missing (MarqueeFlow booking uses JSON store, not MySQL)
+            export DEBIAN_FRONTEND=noninteractive
             if ! command -v mysql >/dev/null 2>&1; then
-              apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq mysql-client
+              apt-get update -qq && apt-get install -y -qq mysql-client
             fi
             MYSQL="$(command -v mysql)"
-
-            # Shared MySQL on VPS — discover working connection (read-only; does not modify MarqueeFlow/AluRate)
-            DB_HOST="127.0.0.1"
-            DB_ADMIN_USER="root"
-            DB_ADMIN_PASS=""
             POS_DB_HOST="localhost"
             MYSQL_ARGS=()
 
@@ -49,47 +46,41 @@ jobs:
               "$MYSQL" "$@" -e "SELECT 1" >/dev/null 2>&1
             }
 
-            if [ -f /root/.my.cnf ] && mysql_ok; then
+            mysql_running() {
+              systemctl is-active --quiet mariadb 2>/dev/null || \
+              systemctl is-active --quiet mysql 2>/dev/null || \
+              ss -tlnp 2>/dev/null | grep -q ':3306'
+            }
+
+            if ! mysql_running; then
+              echo "MySQL: no server detected — installing MariaDB for MarqueeFlow POS only"
+              apt-get update -qq
+              apt-get install -y -qq mariadb-server
+              systemctl enable mariadb
+              systemctl start mariadb
+            fi
+
+            # Prefer root unix-socket auth (Ubuntu MariaDB default)
+            if mysql_ok; then
               MYSQL_ARGS=()
-              POS_DB_HOST="localhost"
+              echo "MySQL: connected as root via unix socket"
+            elif [ -f /root/.my.cnf ] && mysql_ok; then
+              MYSQL_ARGS=()
               echo "MySQL: using /root/.my.cnf"
-            fi
-
-            if [ ${#MYSQL_ARGS[@]} -eq 0 ] && ! mysql_ok; then
-              for envf in /var/www/marqueeflow/backend/.env /var/www/marqueeflow-staging/backend/.env; do
-                if [ -f "$envf" ]; then
-                  set -a; source "$envf"; set +a
-                  DB_HOST="${DB_HOST:-127.0.0.1}"
-                  DB_ADMIN_USER="${DB_USER:-root}"
-                  DB_ADMIN_PASS="${DB_PASSWORD:-}"
-                  echo "MySQL: loaded creds from $envf (host=$DB_HOST user=$DB_ADMIN_USER)"
-                  break
-                fi
-              done
-              for host in "$DB_HOST" localhost 127.0.0.1; do
-                if mysql_ok -h "$host" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"}; then
-                  MYSQL_ARGS=(-h "$host" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"})
+            else
+              for host in localhost 127.0.0.1; do
+                if mysql_ok -h "$host" -u root; then
+                  MYSQL_ARGS=(-h "$host" -u root)
                   POS_DB_HOST="$host"
-                  echo "MySQL: connected via TCP host=$host"
+                  echo "MySQL: connected as root on $host"
                   break
                 fi
               done
-              if [ ${#MYSQL_ARGS[@]} -eq 0 ]; then
-                for sock in /run/mysqld/mysqld.sock /var/run/mysqld/mysqld.sock /tmp/mysql.sock; do
-                  if [ -S "$sock" ] && mysql_ok --socket="$sock" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"}; then
-                    MYSQL_ARGS=(--socket="$sock" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"})
-                    POS_DB_HOST="localhost"
-                    echo "MySQL: connected via socket $sock"
-                    break
-                  fi
-                done
-              fi
             fi
 
             if [ ${#MYSQL_ARGS[@]} -eq 0 ] && ! mysql_ok; then
-              echo "ERROR: Could not connect to MySQL on this VPS"
-              ss -tlnp 2>/dev/null | grep -E '3306|3307' || true
-              ls -la /run/mysqld/ /var/run/mysqld/ 2>/dev/null || true
+              echo "ERROR: MariaDB installed but root connection failed"
+              systemctl status mariadb --no-pager 2>/dev/null || systemctl status mysql --no-pager 2>/dev/null || true
               exit 1
             fi
 
@@ -221,15 +212,25 @@ jobs:
             fi
             pm2 save
 
+            # Seed super admin on production DB if missing
+            COUNT=$("$MYSQL" "${MYSQL_ARGS[@]}" -N -e "SELECT COUNT(*) FROM marqueeflow_pos_db.super_admins" 2>/dev/null || echo 0)
+            if [ "${COUNT:-0}" = "0" ]; then
+              BCRYPT_HASH='$2a$10$KOT/lvoBmQFYW4WPItEkyueyb4VbES2l4gILyNFBKyMX.64roWbLK'
+              "$MYSQL" "${MYSQL_ARGS[@]}" marqueeflow_pos_db -e \
+                "INSERT INTO super_admins (name,email,password) VALUES ('Super Admin','support@marqueeflow.com','${BCRYPT_HASH}');"
+              echo "Seeded super admin support@marqueeflow.com"
+            fi
+
             # nginx (POS vhosts only — new files)
             cp /var/www/marqueeflow-pos-repo/deploy/nginx/pos.marqueeflow.com.conf /etc/nginx/sites-available/
             cp /var/www/marqueeflow-pos-repo/deploy/nginx/staging.pos.marqueeflow.com.conf /etc/nginx/sites-available/
             ln -sf /etc/nginx/sites-available/pos.marqueeflow.com.conf /etc/nginx/sites-enabled/
             ln -sf /etc/nginx/sites-available/staging.pos.marqueeflow.com.conf /etc/nginx/sites-enabled/
+            nginx -t && systemctl reload nginx
 
-            # SSL if DNS ready
-            certbot --nginx -d pos.marqueeflow.com --non-interactive --agree-tos -m support@marqueeflow.com || true
-            certbot --nginx -d staging.pos.marqueeflow.com --non-interactive --agree-tos -m support@marqueeflow.com || true
+            # SSL (HTTP bootstrap above — certbot adds HTTPS)
+            certbot --nginx -d pos.marqueeflow.com --non-interactive --agree-tos -m support@marqueeflow.com --redirect || true
+            certbot --nginx -d staging.pos.marqueeflow.com --non-interactive --agree-tos -m support@marqueeflow.com --redirect || true
             nginx -t && systemctl reload nginx
 
             echo "=== POS setup complete ==="
