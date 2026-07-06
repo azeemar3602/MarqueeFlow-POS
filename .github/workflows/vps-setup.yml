@@ -38,6 +38,19 @@ jobs:
             fi
             MYSQL="$(command -v mysql)"
 
+            # Shared MySQL on VPS — read MarqueeFlow backend .env for admin creds (read-only, no changes to MarqueeFlow)
+            DB_HOST="127.0.0.1"
+            DB_ADMIN_USER="root"
+            DB_ADMIN_PASS=""
+            if [ -f /var/www/marqueeflow/backend/.env ]; then
+              set -a; source /var/www/marqueeflow/backend/.env; set +a
+              DB_HOST="${DB_HOST:-127.0.0.1}"
+              DB_ADMIN_USER="${DB_USER:-root}"
+              DB_ADMIN_PASS="${DB_PASSWORD:-}"
+            elif [ -f /root/.my.cnf ]; then
+              DB_ADMIN_USER="root"
+            fi
+
             # Directories (POS only)
             for d in \
               /var/www/marqueeflow-pos-repo \
@@ -76,19 +89,19 @@ jobs:
             fi
             source "$SECRETS_FILE"
 
-            "$MYSQL" -e "CREATE DATABASE IF NOT EXISTS marqueeflow_pos_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-            "$MYSQL" -e "CREATE DATABASE IF NOT EXISTS marqueeflow_pos_db_staging CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-            "$MYSQL" -e "CREATE USER IF NOT EXISTS 'mf_pos_user'@'localhost' IDENTIFIED BY '${MF_POS_DB_PASS}';" || true
-            "$MYSQL" -e "ALTER USER 'mf_pos_user'@'localhost' IDENTIFIED BY '${MF_POS_DB_PASS}';"
-            "$MYSQL" -e "GRANT ALL ON marqueeflow_pos_db.* TO 'mf_pos_user'@'localhost';"
-            "$MYSQL" -e "GRANT ALL ON marqueeflow_pos_db_staging.* TO 'mf_pos_user'@'localhost';"
-            "$MYSQL" -e "FLUSH PRIVILEGES;"
+            "$MYSQL" -h "$DB_HOST" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"} -e "CREATE DATABASE IF NOT EXISTS marqueeflow_pos_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+            "$MYSQL" -h "$DB_HOST" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"} -e "CREATE DATABASE IF NOT EXISTS marqueeflow_pos_db_staging CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+            "$MYSQL" -h "$DB_HOST" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"} -e "CREATE USER IF NOT EXISTS 'mf_pos_user'@'localhost' IDENTIFIED BY '${MF_POS_DB_PASS}';" || true
+            "$MYSQL" -h "$DB_HOST" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"} -e "ALTER USER 'mf_pos_user'@'localhost' IDENTIFIED BY '${MF_POS_DB_PASS}';"
+            "$MYSQL" -h "$DB_HOST" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"} -e "GRANT ALL ON marqueeflow_pos_db.* TO 'mf_pos_user'@'localhost';"
+            "$MYSQL" -h "$DB_HOST" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"} -e "GRANT ALL ON marqueeflow_pos_db_staging.* TO 'mf_pos_user'@'localhost';"
+            "$MYSQL" -h "$DB_HOST" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"} -e "FLUSH PRIVILEGES;"
 
             # Migrations (sorted — 000-init first)
             for db in marqueeflow_pos_db_staging marqueeflow_pos_db; do
               for f in $(ls /var/www/marqueeflow-pos-repo/backend/migrations/*.sql 2>/dev/null | sort); do
                 echo "Applying $f to $db"
-                "$MYSQL" "$db" < "$f" || true
+                "$MYSQL" -h "$DB_HOST" -u "$DB_ADMIN_USER" ${DB_ADMIN_PASS:+-p"$DB_ADMIN_PASS"} "$db" < "$f" || true
               done
             done
 
