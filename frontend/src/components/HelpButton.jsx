@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react'
-import { HelpCircle, X, ShoppingCart, Package, CreditCard, Printer, Wifi, BookOpen } from 'lucide-react'
-import { openOnboardingGuide } from './SetupWizard'
+import { useState } from 'react'
+import { HelpCircle, X, ShoppingCart, Package, CreditCard, Printer, Wifi } from 'lucide-react'
 
 const TOPICS = [
-  { icon: BookOpen, title: 'Setup guide (recommended)', body: 'Step-by-step tour for web & app — POS, products, credit, reports, printing, and offline mode.', action: 'guide' },
   { icon: ShoppingCart, title: 'Make a sale', body: 'Tap products to add to cart, set payment method, then Complete Sale. Use the camera button to scan barcodes.' },
   { icon: Package, title: 'Add products', body: 'Go to Products → Add Product. Set sale price and stock. Star ⭐ items to show on POS quick tiles.' },
   { icon: CreditCard, title: 'Customer khata (credit)', body: 'Credit page shows who owes you. Customers page manages profiles. Record payments from either screen.' },
@@ -13,22 +11,6 @@ const TOPICS = [
 
 export default function HelpButton() {
   const [open, setOpen] = useState(false)
-  const [wizardOpen, setWizardOpen] = useState(false)
-
-  useEffect(() => {
-    const onWizard = (e) => setWizardOpen(!!e.detail?.open)
-    window.addEventListener('pos:wizard-visible', onWizard)
-    return () => window.removeEventListener('pos:wizard-visible', onWizard)
-  }, [])
-
-  function onTopic(t) {
-    if (t.action === 'guide') {
-      setOpen(false)
-      openOnboardingGuide()
-    }
-  }
-
-  if (wizardOpen) return null
 
   return (
     <>
@@ -45,24 +27,13 @@ export default function HelpButton() {
             </div>
             <div className="p-4 space-y-3">
               {TOPICS.map(t => (
-                t.action === 'guide' ? (
-                  <button key={t.title} type="button" onClick={() => onTopic(t)}
-                    className="w-full flex gap-3 p-3 rounded-xl text-left bg-teal-50 border border-teal-200 hover:bg-teal-100 transition-colors">
-                    <t.icon size={18} className="text-teal-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-sm text-gray-900">{t.title}</p>
-                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">{t.body}</p>
-                    </div>
-                  </button>
-                ) : (
-                  <div key={t.title} className="flex gap-3 p-3 rounded-xl bg-gray-50">
-                    <t.icon size={18} className="text-teal-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-sm text-gray-900">{t.title}</p>
-                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">{t.body}</p>
-                    </div>
+                <div key={t.title} className="flex gap-3 p-3 rounded-xl bg-gray-50">
+                  <t.icon size={18} className="text-teal-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-sm text-gray-900">{t.title}</p>
+                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">{t.body}</p>
                   </div>
-                )
+                </div>
               ))}
               <p className="text-xs text-center text-gray-400 pt-2">support@marqueeflow.com</p>
             </div>

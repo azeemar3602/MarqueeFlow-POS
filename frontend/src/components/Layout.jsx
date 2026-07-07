@@ -5,7 +5,6 @@ import { useState } from 'react'
 import { useSettings, useT } from '../context/SettingsContext'
 import { usePwaInstall } from '../lib/pwa'
 import OfflineBanner from './OfflineBanner'
-import SetupWizard from './SetupWizard'
 import HelpButton from './HelpButton'
 import BrandMark from './BrandMark'
 
@@ -126,9 +125,6 @@ export default function Layout() {
         )
         return null
       })()}
-      {['owner', 'manager'].includes(user?.role) && (
-        <SetupWizard />
-      )}
       <HelpButton />
       <header className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
         <div className="flex items-center gap-3">
